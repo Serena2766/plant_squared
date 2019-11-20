@@ -96,13 +96,14 @@ void loop() {
       //command is received from client Raspberry PI, but the plant is not in the system. 
       //send error message
       Serial.println("{\"error\":command was received but plant is not in the system}");
+    
     }//end if plant is present
   }//end if serial is available
 
 }//end loop
 
 float getMoisture() {
-  //returns a float with 1 decimal representing the moisture percentage (0.0% to 100.0%)
+  //returns a float with 1 decimal representing the moisture percentage
 
   int sensorRead = analogRead(moisturePin);
   float moisture;
@@ -150,6 +151,9 @@ void setLightLevel(byte level){
     level = B00000111; 
   }
 
+  //set global variable light level
+  currentLightLevel = level;
+  
   //increase brightness variable
   while(level > 0){
     brightness += brightnessIncrement;
@@ -182,4 +186,5 @@ void waterPlant(byte amount){
   }
 
   digitalWrite(waterPin,LOW);
+  
 }
