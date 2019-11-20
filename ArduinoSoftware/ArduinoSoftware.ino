@@ -5,6 +5,10 @@
 //definitions
 #define DHTPIN 2     // Digital pin connected to the DHT sensor
 #define DHTTYPE DHT11   // DHT 11
+#define ledPin 3  //defines pin 3 as pin for LED lights
+#define brightnessIncrement 36  //each brightness level is 36 units, or about 14% duty cycle
+#define moisturePin A0 // A0 for moisture sensor data
+
 
 //initialize DHT 11 temperature and humidity sensor sensor
 DHT dht(DHTPIN, DHTTYPE);
@@ -20,9 +24,10 @@ void setup() {
   //begin serial communication
   Serial.begin(9600);
 
-  //set A0 to analogue input for moisture sensor data
-  pinMode(A0, INPUT); 
-
+  //set moisturePin to analogue input for moisture sensor data
+  pinMode(moisturePin, INPUT); 
+  pinMode(ledPin,OUTPUT);
+  
   //begin DHT temp and humidity sensor
   dht.begin(); 
   
@@ -98,7 +103,7 @@ void loop() {
 float getMoisture() {
   //returns a float with 1 decimal representing the moisture percentage
 
-  int sensorRead = analogRead(A0);
+  int sensorRead = analogRead(moisturePin);
   float moisture;
   
   //set maximum to 1000, greater means disconnected
@@ -134,7 +139,24 @@ float getHumidity(){
 }
 
 void setLightLevel(byte level){
+  //use PWM to set the level of light brightness for LEDs
+  //3 left most bytes provide 7 levels
   
+  int brightness = 0; // pwm value between 0 to 255 (0% to 100% duty cycle)
+  
+  if(level > B00000111){
+    //if level is more than maximum, set it to the maximum level
+    level = B00000111; 
+  }
+
+  //increase brightness variable
+  while(level > 0){
+    brightness += brightnessIncrement;
+    level--;
+  }
+
+  //turn on LED to desired brightness
+  analogWrite(ledPin,brightness);
 }
 
 bool isPlantPresentFunc(){
