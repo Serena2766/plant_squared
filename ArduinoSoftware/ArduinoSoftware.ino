@@ -1,20 +1,19 @@
 //libraries
-#include "DHT.h" //DHT library
+#include "DHT.h" //temperature and humidity sensor library
 
 
-//PIN definitions
+//definitions
 #define DHTPIN 2     // Digital pin connected to the DHT sensor
-#define DHTTYPE DHT22   // DHT 22  (AM2302), AM2321
+#define DHTTYPE DHT11   // DHT 11
 
 //initialize DHT 11 temperature and humidity sensor sensor
 DHT dht(DHTPIN, DHTTYPE);
 
 //Global variables
-int currentLightLevel;
+int currentLightLevel = 0;
 bool isPlantPresent = false;
 bool wasPlantPresent = false;
 byte command = 0;
-String serialMessage; //defined as global variable so arduino to reduce allocated memory
 
 void setup() {
 
@@ -24,7 +23,7 @@ void setup() {
   //set A0 to analogue input for moisture sensor data
   pinMode(A0, INPUT); 
 
-  //begin DHT readings
+  //begin DHT temp and humidity sensor
   dht.begin(); 
   
 }
@@ -33,24 +32,21 @@ void loop() {
 
   //code implements arduino software flow chart on page 17 of design document
 
- //recognize if plant is present and set isPlant Present variable
+
  isPlantPresent = isPlantPresentFunc();
 
  if(isPlantPresent != wasPlantPresent){
-  //state of plant has changesd (either the plant was added or removed from system)
+  //state of plant has changed (either the plant was added or removed from system)
+  //notify client Raspberry Pi and update wasPlantPresent variable to current reading
   
-  //send isPlantPresdent to client raspberry Pi
-  serialMessage = String("{\"isPlantPresent\" : ") + String(isPlantPresent) + String("}");
-  Serial.println(serialMessage);
-
-  //set wasPlantPresent to current value of isPlantPresent
+  Serial.println(String("{\"isPlantPresent\" : ") + String(isPlantPresent) + String("}"));
   wasPlantPresent = isPlantPresent;
  }
 
  
   //get and perform command
   if(Serial.available() > 0){
-    //command available
+    //There is at least one command available
 
     command = Serial.read(); //read command and remove byte from buffer. if there is no plant command will be discarded anyway
 
@@ -59,61 +55,85 @@ void loop() {
 
       //decipher command
       if(command == B01110000){
+        //update data: read and send data from all the sensors
+        String serialMessage = "{";
         
-        //read and send data from all the sensors
-        Serial.println("all data");
+        serialMessage += "\"moisture\":" + String(getMoisture(),1) + ",";
+        serialMessage += "\"temperature\":" + String(getTemperature(),2) + ",";
+        serialMessage += "\"humidity\":" + String(getHumidity(),2) + ",";
+        serialMessage += "\"lightLevel\":" + String(currentLightLevel);
+        
+        serialMessage += "}";
+        Serial.println(serialMessage);
         
       }else if(command >> 4 == B00000001){
+        //water the plant, command = 0001 0+amount(3bits)
+        //acknowledgment needed
         
-        //water the plant command = 0001 0+amount(3bits)
         byte amount = command - B00010000;
-         
-        Serial.print("water plant ");
-        Serial.println(amount);
+        waterPlant(amount);
+        Serial.println("a");
         
       }else if(command >> 5 == B00000001){
-        
         //set light level 
-        byte amount = command - B00100000;
+        //acknowledgment needed
         
-        Serial.print("set light level ");
-        Serial.println(amount);
+        byte level = command - B00100000;
+        setLightLevel(level);
+        Serial.println("a");
       }else{
         //command not found
         Serial.print("{\"error\":command not found} ");
       }
-
-      Serial.print("command: ");
-      Serial.println(command);
       
     }else{
       //command is received from client Raspberry PI, but the plant is not in the system. 
       //send error message
       Serial.println("{\"error\":command was received but plant is not in the system}");
-    }
+    }//end if plant is present
+  }//end if serial is available
+
+}//end loop
+
+float getMoisture() {
+  //returns a float with 1 decimal representing the moisture percentage
+
+  int sensorRead = analogRead(A0);
+  float moisture;
+  
+  //set maximum to 1000, greater means disconnected
+  if(sensorRead >= 1000){
+    moisture = 0.00;
+  }else{
+    moisture = (float)(1000 - sensorRead)/10.00;
   }
-
+  
+  return moisture;
 }
 
+float getTemperature(){
+  //returns the temperature with 2 decimals
+  float temp = dht.readTemperature(); //read temperature in celsius
 
-double getMoisture() {
-  return 0;
+  if(isnan(temp)){
+    return -100.00;
+  }
+  
+  return temp;
 }
 
-double getTemperature(){
-  return 0;
+float getHumidity(){
+  //returns humidity as a float with 2 decimals
+  float humidity = dht.readHumidity();
+
+  if(isnan(humidity)){
+    return -100.00;
+  }
+  
+  return humidity;
 }
 
-double getHumidity(){
- return 0;
-}
-
-
-int getLightLevel(){
-  return 0;
-}
-
-void setLightLevel(int level){
+void setLightLevel(byte level){
   
 }
 
@@ -121,6 +141,6 @@ bool isPlantPresentFunc(){
   return true;
 }
 
-void waterPlant(){
+void waterPlant(byte amount){
   
 }
