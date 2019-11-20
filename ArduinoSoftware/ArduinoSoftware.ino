@@ -8,7 +8,7 @@
 #define ledPin 3  //defines pin 3 as pin for LED lights
 #define brightnessIncrement 36  //each brightness level is 36 units, or about 14% duty cycle
 #define moisturePin A0 // A0 for moisture sensor data
-
+#define waterPin 4  //pin 4 used for watering plant
 
 //initialize DHT 11 temperature and humidity sensor sensor
 DHT dht(DHTPIN, DHTTYPE);
@@ -24,9 +24,10 @@ void setup() {
   //begin serial communication
   Serial.begin(9600);
 
-  //set moisturePin to analogue input for moisture sensor data
+  //set pins
   pinMode(moisturePin, INPUT); 
   pinMode(ledPin,OUTPUT);
+  pinMode(waterPin, OUTPUT);
   
   //begin DHT temp and humidity sensor
   dht.begin(); 
@@ -88,7 +89,7 @@ void loop() {
         Serial.println("a");
       }else{
         //command not found
-        Serial.print("{\"error\":command not found} ");
+        //Serial.println("{\"error\":command not found} ");
       }
       
     }else{
@@ -101,7 +102,7 @@ void loop() {
 }//end loop
 
 float getMoisture() {
-  //returns a float with 1 decimal representing the moisture percentage
+  //returns a float with 1 decimal representing the moisture percentage (0.0% to 100.0%)
 
   int sensorRead = analogRead(moisturePin);
   float moisture;
@@ -164,5 +165,21 @@ bool isPlantPresentFunc(){
 }
 
 void waterPlant(byte amount){
-  
+  //water the plant of "amount" of seconds
+  //amount is between 0 and 7, represented by the left most 3 bits of byte amount
+
+  if(amount == 0){
+    return;
+  }else if(amount > 7){
+    amount = 7; //set maximum to 7
+  }
+
+
+  while(amount > 0){
+    digitalWrite(waterPin,HIGH);
+    delay(1000);
+    amount--;
+  }
+
+  digitalWrite(waterPin,LOW);
 }
