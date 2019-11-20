@@ -29,12 +29,14 @@ class ImageProcessor:
             raise RuntimeError("Error initializing neural net")
 
         self.plant_present = False
-        self.plant_id = 0
+        self.plant_id = self.neural_net.NO_PLANT
+        self.camera = None
 
     def _assign_camera(self, camera: Camera) -> bool:
         """
         The function that must be used to link a camera object to this
-        ImageProcessor object. 
+        ImageProcessor object. If the operation is successful then function
+        returns true, else returns false.
         """
         if camera is None or not isinstance(camera, Camera):
             raise TypeError("Camera must be a valid Camera type object")

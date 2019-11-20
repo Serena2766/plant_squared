@@ -21,7 +21,7 @@ class NeuralNetwork:
     recognition algorithm. It is initialized once at the startup of
     our code and then keeps itself loaded. 
     """
-    LABELS = ["1", "2", "3", "4", "5"]
+    LABELS = ["1", "2", "3", "4", "NOTHING"]
     NO_PLANT = 4
     def __init__(self, model_path: Path):
         """
