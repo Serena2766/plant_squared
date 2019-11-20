@@ -6,9 +6,11 @@
 #define DHTPIN 2     // Digital pin connected to the DHT sensor
 #define DHTTYPE DHT11   // DHT 11
 #define ledPin 3  //defines pin 3 as pin for LED lights
-#define brightnessIncrement 36  //each brightness level is 36 units, or about 14% duty cycle
+#define brightnessIncrement 36  //One brightness levl increment. Each brightness level is 36 units, or about 14% duty cycle
 #define moisturePin A0 // A0 for moisture sensor data
+#define moistureTRS 5 //minimum moisture percentage for plant to be detected
 #define waterPin 4  //pin 4 used for watering plant
+
 
 //initialize DHT 11 temperature and humidity sensor sensor
 DHT dht(DHTPIN, DHTTYPE);
@@ -165,6 +167,14 @@ void setLightLevel(byte level){
 }
 
 bool isPlantPresentFunc(){
+  //determines if there is a plant in the box by checking the moisture level
+  float moisture = getMoisture();
+
+  if(moisture < moistureTRS){
+    //minimum moisture accepted in not met, plant is not connected to the system
+    return false;
+  }
+  
   return true;
 }
 
