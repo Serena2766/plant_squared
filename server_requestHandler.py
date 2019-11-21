@@ -74,7 +74,7 @@ while True:
         #next test case
         cnt =0
         data = UPDATE_COMMAND + bit1
-        print('Auto send update command')
+        print('Auto send update request')
         server_socket.sendto(data.encode('utf-8'),client_address)
         while server_timeout(server_socket) and cnt < 3:
             cnt = cnt + 1
@@ -87,11 +87,9 @@ while True:
     try:       
         print ("\nListening on port %d : press Ctrl-C to stop " % listen_port)
         data, address = server_socket.recvfrom(SIZE)
-        #print ("Received %s bytes from %s %s: " % (len(data), address, data ))
         ip,port = address
         if len(data) is not 8: 
             server_socket.sendto(NACK.encode('utf-8'),address)
-            #print("Received invalid packet, send NACK to {}" .format(address))
             print("Received invalid packet, send NACK to where it's from ")
         else:
             if data[:4] == WATER_COMMAND:
@@ -119,9 +117,9 @@ while True:
                     print('Invalid light amount, send back NACK')
                     server_socket.sendto(NACK.encode('utf-8'),address)                  
             elif data[:4] == UPDATE_COMMAND:
-                print('Received update command.')
+                print('Received update request.')
                 server_socket.sendto(ACK.encode('utf-8'),address)
-                print('Sent to the client')
+                print('Sent the update request to client')
                 time.sleep(2)
                 server_socket.sendto(data.encode('utf-8'),client_address)
                 server_timeout(server_socket)                
