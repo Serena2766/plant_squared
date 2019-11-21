@@ -11,9 +11,10 @@ bit2 = '0010'
 bit3 = '0011'
 bit4 = '0100'
 bit5 = '0101'
-
+s
 DEFAULT = 0
 current_plant_id = DEFAULT
+current_condition = [1,1,20,30]
 
 SIZE = 1024
 client_ip = 'localhost'
@@ -55,6 +56,10 @@ def server_timeout(s):
                     receive_NACK = True
                 elif data[:4] == UPDATE_COMMAND:
                     print('Received updated info, send back ACK')
+                    print('light_level is %d'%current_condition[0])
+                    print('water_level is %d'%current_condition[1])
+                    print('humidity is %d'%current_condition[2])
+                    print('temperture is %d'%current_condition[3])
                     server_socket.sendto(ACK.encode('utf-8'),address)
                     receive_ACK = True
             except :
@@ -140,6 +145,7 @@ while True:
                     server_socket.sendto(data.encode('utf-8'),address) 
                     print('Valid plant id, send to App')
                     current_plant_id = set_plant_id(data[4:])
+                    
                     print('Data updated, current plant id is %d'%current_plant_id)
                     while server_timeout(server_socket):
                         server_socket.sendto(data.encode('utf-8'),address)                    
