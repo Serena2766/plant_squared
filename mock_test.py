@@ -1,22 +1,5 @@
 import socket, sys, time
 
-
-
-# s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-
-# port = int(2002)
-# server_address = ('localhost', port)
-# s.bind(server_address)
-# client_address = ('localhost', 2004)
-# while True:
-
-    # print ("Waiting to receive on port %d : press Ctrl-C or Ctrl-Break to stop " % port)
-
-    # buf, address = s.recvfrom(port)
-  
-    # if not len(buf):
-        # break
-    # print ("Received %s bytes from %s %s: " % (len(buf), address, buf ))
 WATER_COMMAND = '0001'
 LIGHT_COMMAND = '0010'
 PLANTID_COMMAND = '0100'
@@ -97,9 +80,7 @@ while True:
                 time.sleep(2)
                 s.sendto(ACK.encode('utf-8'), server_address)
         #print ("Received %s bytes from %s %s: " % (len(data), address, data ))
-
     except (KeyboardInterrupt,SystemExit):
         print('Exit the system.')
-        raise
-    
+        raise   
 s.close()

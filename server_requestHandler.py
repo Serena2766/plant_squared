@@ -71,7 +71,7 @@ while True:
             server_socket.sendto(data.encode('utf-8'),client_address)
             if cnt == 3:
                 print('Something wrong wiht the client')
-        
+        #next test case
         cnt =0
         data = UPDATE_COMMAND + bit1
         print('Auto send update command')
@@ -83,12 +83,9 @@ while True:
             server_socket.sendto(data.encode('utf-8'),client_address)
             if cnt == 3:
                 print('Something wrong wiht the client')
-        
-            
-    try:
-        
+    #listen on the port            
+    try:       
         print ("\nListening on port %d : press Ctrl-C to stop " % listen_port)
-
         data, address = server_socket.recvfrom(SIZE)
         #print ("Received %s bytes from %s %s: " % (len(data), address, data ))
         ip,port = address
@@ -96,7 +93,6 @@ while True:
             server_socket.sendto(NACK.encode('utf-8'),address)
             #print("Received invalid packet, send NACK to {}" .format(address))
             print("Received invalid packet, send NACK to where it's from ")
-
         else:
             if data[:4] == WATER_COMMAND:
                 print('Received water command.')                
@@ -106,12 +102,10 @@ while True:
                     time.sleep(2)
                     server_socket.sendto(data.encode('utf-8'),client_address)
                     while server_timeout(server_socket):
-                        server_socket.sendto(data.encode('utf-8'),client_address)
-                    
+                        server_socket.sendto(data.encode('utf-8'),client_address)                    
                 else:
                     print('Invalid water amount, send back NACK')
-                    server_socket.sendto(NACK.encode('utf-8'),address)
-                
+                    server_socket.sendto(NACK.encode('utf-8'),address)         
             elif data[:4] == LIGHT_COMMAND:
                 print('Received light command.')           
                 if valid_amount(data):
@@ -123,16 +117,14 @@ while True:
                         server_socket.sendto(data.encode('utf-8'),client_address)
                 else:
                     print('Invalid light amount, send back NACK')
-                    server_socket.sendto(NACK.encode('utf-8'),address)
-                    
+                    server_socket.sendto(NACK.encode('utf-8'),address)                  
             elif data[:4] == UPDATE_COMMAND:
                 print('Received update command.')
                 server_socket.sendto(ACK.encode('utf-8'),address)
                 print('Sent to the client')
                 time.sleep(2)
                 server_socket.sendto(data.encode('utf-8'),client_address)
-                server_timeout(server_socket)
-                
+                server_timeout(server_socket)                
             elif data[:4] == PLANTID_COMMAND:
                 print('Received plant id command.')
                 if data[4:] == bit1 or data[4:] == bit2 or data[4:] == bit3:
@@ -142,19 +134,14 @@ while True:
                     print('Valid plant id, send to App')
                     print('Data updated')
                     while server_timeout(server_socket):
-                        server_socket.sendto(data.encode('utf-8'),address)
-                    
+                        server_socket.sendto(data.encode('utf-8'),address)                    
                 else:
                     print('Invalid plant id, send back NACK')
                     server_socket.sendto(NACK.encode('utf-8'),address)
-                    
-            
+   
     except (KeyboardInterrupt,SystemExit):
         print('Exit the system.')
-        raise
-        
-        
-    # print ("Received %s bytes from %s %s: " % (len(data), address, data ))
+        raise       
 server_socket.close()
 server_socket.shutdown(1)
 
