@@ -1,4 +1,6 @@
 import socket, sys, time, datetime
+import sqlite3
+from sqlite3 import Error
 
 WATER_COMMAND = '0001'
 LIGHT_COMMAND = '0010'
@@ -11,11 +13,11 @@ bit2 = '0010'
 bit3 = '0011'
 bit4 = '0100'
 bit5 = '0101'
-s
+
 DEFAULT = 0
 current_plant_id = DEFAULT
-current_condition = [1,1,20,30]
-
+current_condition = [1,1,20.3,31.5]
+ideal_condition =[]
 SIZE = 1024
 client_ip = 'localhost'
 client_port = int(9003)
@@ -33,6 +35,7 @@ def valid_amount(cmd):
         return True
     else:
         return False
+        
 def set_plant_id(i):
     switcher={
         bit1:1,
@@ -40,6 +43,44 @@ def set_plant_id(i):
         bit3:3           
         }
     return switcher.get(i,DEFAULT)
+
+def create_connection(db_file):
+    """ create a database connection to the SQLite database
+        specified by db_file
+    :param db_file: database file
+    :return: Connection object or None
+    """
+    conn = None
+    try:
+        conn = sqlite3.connect(db_file)
+        return conn
+    except Error as e:
+        print(e)
+ 
+    return conn
+ 
+def update_id_info(conn, id):
+    """
+    Query all rows in the tasks table
+    :param conn: the fonnection object
+    :return:
+    """
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM plants WHERE id=?",(id,))
+ 
+    rows = cur.fetchall()
+ 
+    for row in rows:
+        print('Ideal conditions updated.')
+        print('Ideal water_level:%d' %row[2])
+        ideal_condition.insert(0,row[2])
+        print('Ideal light_level:%d' %row[3])
+        ideal_condition.insert(1,row[3])
+        print('Ideal humidity:%3.2f' %row[4])
+        ideal_condition.insert(2,row[4])
+        print('Ideal temperture:%3.2f' %row[5])
+        ideal_condition.insert(3,row[5])
+    
 def server_timeout(s):
         receive_ACK = False
         receive_NACK = False
@@ -55,11 +96,15 @@ def server_timeout(s):
                     print('Received NACK')
                     receive_NACK = True
                 elif data[:4] == UPDATE_COMMAND:
-                    print('Received updated info, send back ACK')
-                    print('light_level is %d'%current_condition[0])
-                    print('water_level is %d'%current_condition[1])
-                    print('humidity is %d'%current_condition[2])
-                    print('temperture is %d'%current_condition[3])
+                    print('Received updated id info, send back ACK')
+                    # print('light_level is %d'%current_condition[0])
+                    # print('water_level is %d'%current_condition[1])
+                    # print('humidity is %d'%current_condition[2])
+                    # print('temperture is %d'%current_condition[3])
+                    current_plant_id = set_plant_id(data[4:])
+                    database = 'demo.db'
+                    conn = create_connection(database)
+                    update_id_info(conn,current_plant_id)
                     server_socket.sendto(ACK.encode('utf-8'),address)
                     receive_ACK = True
             except :
@@ -88,7 +133,7 @@ while True:
         #next test case
         cnt =0
         data = UPDATE_COMMAND + bit1
-        print('Auto send update request')
+        print('\nAuto send update ID request')
         server_socket.sendto(data.encode('utf-8'),client_address)
         while server_timeout(server_socket) and cnt < 3:
             cnt = cnt + 1
@@ -133,7 +178,8 @@ while True:
             elif data[:4] == UPDATE_COMMAND:
                 print('Received update request.')
                 server_socket.sendto(ACK.encode('utf-8'),address)
-                print('Sent the update request to client')
+                if time_to_light < 5:
+                    print('Sent the update request to client')
                 time.sleep(2)
                 server_socket.sendto(data.encode('utf-8'),client_address)
                 server_timeout(server_socket)                
@@ -145,7 +191,10 @@ while True:
                     server_socket.sendto(data.encode('utf-8'),address) 
                     print('Valid plant id, send to App')
                     current_plant_id = set_plant_id(data[4:])
-                    
+                    #fetch data in the database
+                    database = 'demo.db'
+                    conn = create_connection(database)
+                    update_id_info(conn,current_plant_id)
                     print('Data updated, current plant id is %d'%current_plant_id)
                     while server_timeout(server_socket):
                         server_socket.sendto(data.encode('utf-8'),address)                    
