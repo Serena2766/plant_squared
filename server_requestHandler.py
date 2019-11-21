@@ -97,14 +97,11 @@ def server_timeout(s):
                     receive_NACK = True
                 elif data[:4] == UPDATE_COMMAND:
                     print('Received updated id info, send back ACK')
-                    # print('light_level is %d'%current_condition[0])
-                    # print('water_level is %d'%current_condition[1])
-                    # print('humidity is %d'%current_condition[2])
-                    # print('temperture is %d'%current_condition[3])
                     current_plant_id = set_plant_id(data[4:])
                     database = 'demo.db'
                     conn = create_connection(database)
                     update_id_info(conn,current_plant_id)
+                    print('Data updated, current plant id is %d'%current_plant_id)
                     server_socket.sendto(ACK.encode('utf-8'),address)
                     receive_ACK = True
             except :
