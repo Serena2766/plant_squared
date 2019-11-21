@@ -12,6 +12,9 @@ bit3 = '0011'
 bit4 = '0100'
 bit5 = '0101'
 
+DEFAULT = 0
+current_plant_id = DEFAULT
+
 SIZE = 1024
 client_ip = 'localhost'
 client_port = int(9003)
@@ -29,7 +32,13 @@ def valid_amount(cmd):
         return True
     else:
         return False
-        
+def set_plant_id(i):
+    switcher={
+        bit1:1,
+        bit2:2,
+        bit3:3           
+        }
+    return switcher.get(i,DEFAULT)
 def server_timeout(s):
         receive_ACK = False
         receive_NACK = False
@@ -130,7 +139,8 @@ while True:
                     time.sleep(2)
                     server_socket.sendto(data.encode('utf-8'),address) 
                     print('Valid plant id, send to App')
-                    print('Data updated')
+                    current_plant_id = set_plant_id(data[4:])
+                    print('Data updated, current plant id is %d'%current_plant_id)
                     while server_timeout(server_socket):
                         server_socket.sendto(data.encode('utf-8'),address)                    
                 else:
@@ -142,20 +152,3 @@ while True:
         raise       
 server_socket.close()
 server_socket.shutdown(1)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
