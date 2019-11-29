@@ -112,21 +112,6 @@ def server_timeout(s):
 
 time_to_light = 0    
 
-def handle_timeout(s, addr):
-    cnt = 0
-    while server_timeout(s) and cnt < 3:
-        cnt = cnt + 1
-        print('Server timeouts, resend the message')
-        time.sleep(1)
-        server_socket.sendto(data.encode('utf-8'),addr)     
-        if cnt == 3:
-            if addr[0] == app_ip:
-                print('Something wrong with the app')
-            elif addr[0] == client_ip:
-                print('Something wrong with the server')
-
-
-
 while True:
     time_to_light = time_to_light + 1
     
