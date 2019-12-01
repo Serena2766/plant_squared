@@ -3,8 +3,8 @@ import time
 import io
 
 class ArduinoPlant:
-    MAX_WATER_LEVEL = 7
-    MAX_LIGHT_LEVEL = 7
+    MAX_WATER_LEVEL = 5
+    MAX_LIGHT_LEVEL = 5
     MIN_LEVEL = 0
     
     def __init__(self, port, baudrate):
@@ -23,7 +23,7 @@ class ArduinoPlant:
 
     def waterPlant(self, amount):
         #sends command to arduino to water the plant
-        #amount has to be between 0 and 7
+        #amount has to be between 0 and 5
         if amount == 0:
             return True
         
@@ -35,9 +35,7 @@ class ArduinoPlant:
     
     def setLightLevel(self, amount):
         #sends command to arduino to set the light level
-        #amount has to be between 0 and 7
-        if amount == 0:
-            return True
+        #amount has to be between 0 and 5
         
         amount = ArduinoPlant.check_and_convert_amount(amount,ArduinoPlant.MIN_LEVEL, ArduinoPlant.MAX_WATER_LEVEL)
         intCommand = 32 + amount
