@@ -1,4 +1,6 @@
-import socket, sys, time, datetime, json
+# author Xinrui Zhang
+# version 12.1.2019
+import socket, sys, time, threading, json
 import sqlite3
 from sqlite3 import Error
 
@@ -32,7 +34,8 @@ server_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 server_socket.bind((server_ip,server_port))
 
 def is_valid(cmd, list):    
-    """ check if the amount is valid in the receving data
+    """ 
+    check if the amount is valid in the receiving data
     :param cmd: receive data
     :param list: valid amount
     :return: True or False
@@ -43,8 +46,9 @@ def is_valid(cmd, list):
         return False
         
 def valid_current_info(buf,current_condition):
-    """ check and update the current condition 
-        if the json is valid in the receving data
+    """ 
+    check and update the current condition 
+    if the json is valid in the receiving data
     :param buf: receive data
     :return: True or False
     """
@@ -64,16 +68,24 @@ def valid_current_info(buf,current_condition):
         return True        
         
 def set_plant_id(i):
+    """ 
+    Set received plant id to the current plant id
+    :param i: received plant id
+    :return: current plant id
+    """
     switcher={
-        bit_list[1]:1,
-        bit_list[2]:2,
-        bit_list[3]:3           
+        bit_list[0]:1,
+        bit_list[1]:2,
+        bit_list[2]:3, 
+        bit_list[3]:4,
+        bit_list[4]:5        
         }
     return switcher.get(i,DEFAULT)
-
+    
 def create_connection(db_file):
-    """ create a database connection to the SQLite database
-        specified by db_file
+    """ 
+    create a database connection to the SQLite database
+    specified by db_file
     :param db_file: database file
     :return: Connection object or None
     """
@@ -89,11 +101,11 @@ def create_connection(db_file):
 def update_id_info(conn, id):
     """
     Query all rows in the tasks table
-    :param conn: the fonnection object
-    :return:
+    :param conn: the connection object
+    :param id: current plant id
     """
     cur = conn.cursor()
-    cur.execute("SELECT * FROM plants WHERE id=?",(id,)) 
+    cur.execute("SELECT * FROM plants_info WHERE plant_id=?",(id,)) 
     rows = cur.fetchall()
  
     for row in rows:
@@ -109,26 +121,37 @@ def update_id_info(conn, id):
         ideal_condition.insert(3,row[5])
     
 def server_timeout(s):
-        receive_ACK = False
-        receive_NACK = False
-        timeout = False    
-        s.settimeout(5)
-        while not receive_ACK and not receive_NACK and not timeout:                    
-            try :
-                data, address = s.recvfrom(1024)
-                if data == ACK:
-                    print('Received ACK')
-                    receive_ACK = True
-                elif data == NACK:
-                    print('Received NACK')
-                    receive_NACK = True
-            except :
-                timeout = True               
-                break
-        s.settimeout(None)
-        return timeout
+    """
+    test if the server times out
+    :param s: server socket
+    """
+    receive_ACK = False
+    receive_NACK = False
+    timeout = False    
+    s.settimeout(5)
+    while not receive_ACK and not receive_NACK and not timeout:                    
+        try :
+            data, address = s.recvfrom(1024)
+            if data == ACK:
+                print('Received ACK')
+                receive_ACK = True
+            elif data == NACK:
+                print('Received NACK')
+                receive_NACK = True
+        except :
+            timeout = True               
+            break
+    s.settimeout(None)
+    return timeout
 
 def handle_timeout(s, addr, data):
+    """
+    handle by re sending three times 
+    if the server times out
+    :param s: server socket
+    :param addr: address to re send to 
+    :param data: data to re send
+    """    
     cnt = 0
     while server_timeout(s) and cnt < 3:
         cnt = cnt + 1
@@ -141,6 +164,36 @@ def handle_timeout(s, addr, data):
             elif addr[0] == client_ip:
                 print('Something wrong with the server')    
 
+def int_to_bit(i):
+    switcher={
+        1:bit_list[0],
+        2:bit_list[1],
+        3:bit_list[2], 
+        4:bit_list[3],
+        5:bit_list[4]        
+        }
+    return switcher.get(i,DEFAULT)    
+
+def take_care_plant(s):
+    if not all(v == 0 for v in ideal_condition) and not all(v == 0 for v in current_condition):
+        #water the plant if current moisture is below the ideal one
+        if current_condition[0] < ideal_condition[0]:
+            print('Auto check: the plant needs to be watered ')
+            data = '00010001'
+            s.sendto(data.encode('utf-8'), client_address)  
+            print('Sent water the plant to the client ')
+            handle_timeout(s, client_address, data)
+        #set the light level if current light_level is not the ideal one    
+        if not current_condition[1] == ideal_condition[1]:
+            print('Auto check: the plant needs lights ')
+            data = LIGHT_COMMAND + int_to_bit(ideal_condition[1])
+            s.sendto(data.encode('utf-8'), client_address)  
+            print('Sent set light_level to the client ')
+            handle_timeout(s, client_address, data)
+            
+t = Timer(60.0, take_care_plant(server_socket))
+t.start()
+
 while True:
     #listen on the port            
     try:       
@@ -152,31 +205,36 @@ while True:
             print("Received invalid packet, send NACK to where it's from ")
         else:
             if data[:4] == WATER_COMMAND:
+            #handle water command
                 print('Received water command.')                
                 if is_valid(data,bit_list):
                     print('Valid water amount, send back ACK')
                     server_socket.sendto(ACK.encode('utf-8'),address)
                     time.sleep(2)
                     server_socket.sendto(data.encode('utf-8'),client_address)
+                    print('Sent water the plant to the client ')
                     handle_timeout(server_socket, client_address, data)                
                 else:
                     print('Invalid water amount, send back NACK')
                     server_socket.sendto(NACK.encode('utf-8'),address)   
                     
             elif data[:4] == LIGHT_COMMAND:
+            #handle light command
                 print('Received light command.')           
                 if is_valid(data,bit_list):
                     print('Valid light amount, send back ACK')
                     server_socket.sendto(ACK.encode('utf-8'),address)
                     time.sleep(2)
                     server_socket.sendto(data.encode('utf-8'),client_address)
+                    print('Sent set light_level to the client ')
                     handle_timeout(server_socket, client_address, data)
                 else:
                     print('Invalid light amount, send back NACK')
                     server_socket.sendto(NACK.encode('utf-8'),address)   
                     
             elif data[:4] == UPDATE_COMMAND:
-                print('Received update request.')
+            #handle update command
+                print('Received update request, send back ACK')
                 server_socket.sendto(ACK.encode('utf-8'),address)
                 #send current conditions in json to the app 
                 msg = { }
@@ -188,16 +246,19 @@ while True:
                 json_data = json.dumps(msg)
                 json_str = str(json_data)
                 time.sleep(2)
-                server_socket.sendto(json_str.encode('utf-8'),app_address)                 
+                server_socket.sendto(json_str.encode('utf-8'),app_address)  
+                print('Sent update info to the app ')
                 handle_timeout(server_socket, app_address, json_str)  
                 
             elif data[:4] == PLANTID_COMMAND:
+            #handle plant id request
                 print('Received plant id command.')
-                if is_valid(data[4:], bit_list):
+                if is_valid(data, bit_list):
                     server_socket.sendto(ACK.encode('utf-8'),address)
+                    print('Valid plant id, send back ACK')
                     time.sleep(2)
                     server_socket.sendto(data.encode('utf-8'),app_address) 
-                    print('Valid plant id, send to App')
+                    print('Sent plant id to the app')
                     current_plant_id = set_plant_id(data[4:])
                     print('Data updated, current plant id is %d'%current_plant_id)
                     #fetch data in the database
@@ -210,8 +271,11 @@ while True:
                     print('Invalid plant id, send back NACK')
                     server_socket.sendto(NACK.encode('utf-8'),address)
             else:
-                if valid_current_info(data, current_condition):
+                if valid_current_info(data, current_condition):               
+                #handle if received a valid json message
+                    print('Received valid json message')
                     server_socket.sendto(ACK.encode('utf-8'),address)
+                    print('Send back ACK')
                     print('Current conditions updated.')
                     print('Current moisture:%3.2f' %current_condition[0])
                     print('Current light_level:%d' %current_condition[1])
