@@ -11,30 +11,13 @@ App for Monitoring and Controlling a plant
  */
 
 
-//main function runs the app and awaits a UPD message
+//main function runs the app
 void main() {
-
   runApp(MyApp());
 
-  //var address = new InternetAddress('172.16.32.73');
-  var address = new InternetAddress('127.0.0.1');
-  RawDatagramSocket.bind(address, 9003).then((udpSocket) {
-
-    //Waiting to receive data packet containing plant info
-
-    udpSocket.listen((e) {
-      print(e.toString());
-      Datagram dg = udpSocket.receive();
-      if(dg != null)
-        dg.data.forEach((x) => print(x));
-      //check if the "toString()" function works
-      //if(dg.data.contains(''))
-
-    });
-  });
 }
 
-//Send UPD packets based on
+//Send UPD packets based on user command is given
 void _sendCommand(var x) {
   print('send command function: '  + '$x');
 
@@ -42,7 +25,7 @@ void _sendCommand(var x) {
   var codec = new Utf8Codec();
   //List<int> dataToSend = codec.encode(data);
   List<int> dataToSend = codec.encode(x);
-  print(dataToSend);
+  print('$dataToSend');
 
   //var address = new InternetAddress('172.16.32.73');
   var address = new InternetAddress('127.0.0.1');
@@ -54,12 +37,13 @@ void _sendCommand(var x) {
 }
 
 
-
 void _todo()
 {
 
 
 }
+
+
 class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
@@ -72,7 +56,7 @@ class MyApp extends StatelessWidget {
         primaryColor: Colors.teal, //affects app bar
         brightness: Brightness.light,
       ),
-      home: MyHomePage(title: 'Flutter Demo Home Page'),
+      home: MyHomePage(title: 'Plant Squared'),
     );
   }
 }
@@ -80,14 +64,34 @@ class MyApp extends StatelessWidget {
 class MyHomePage extends StatefulWidget {
   MyHomePage({Key key, this.title}) : super(key: key);
 
-
   final String title;
 
   @override
   _MyHomePageState createState() => _MyHomePageState();
 }
 
+
 class _MyHomePageState extends State<MyHomePage> {
+
+  //Function for setting up the connection for receiving data
+  void setUpSocket()
+  {
+    //var address = new InternetAddress('172.16.32.73');
+    var address = new InternetAddress('127.0.0.1');
+    RawDatagramSocket.bind(address, 9003).then((udpSocket) {
+
+      //Waiting to receive data packet containing plant info
+      udpSocket.listen((e) {
+        print(e.toString());
+        Datagram dg = udpSocket.receive();
+        if(dg != null)
+          dg.data.forEach((x) => print(x));
+        //check if the "toString()" function works
+        //if(dg.data.contains(''))
+
+      });
+    });
+  }
 
   //****************************************
   //              Variables
@@ -96,27 +100,28 @@ class _MyHomePageState extends State<MyHomePage> {
   int _plantType = 5; // start as N/A
 
   //The current conditions
-  int _waterLevel = 0;
-  int _temperature = 0;
-  int _humidity = 0;
+  double _waterLevel = 0;
+  double _temperature = 0;
+  double _humidity = 0;
 
   //The ideal conditions
-  int _idealWaterLevel = 0;
-  int _idealTemperature = 0;
-  int _idealHumidity = 0;
+  double _idealWaterLevel = 0;
+  double _idealTemperature = 0;
+  double _idealHumidity = 0;
 
-  //A default image to show
+  //Central image and name of plant
   Image _mainImage;
-  String _flowerName;
+  String _plantName;
 
   @override
   initState(){
     _mainImage = Image.asset('assets/flower.png');
-    _flowerName = 'Default Flower';
+    _plantName = 'Default Flower';
+    setUpSocket(); //jx Not sure if here
   }
   //****************************************
 
-  //Sends a UDP message requestions picture data
+  //Sends a UDP message requests picture data
   //Receive picture data
   void _videoReceiver()
   {
@@ -125,6 +130,23 @@ class _MyHomePageState extends State<MyHomePage> {
     setState(() {
       _mainImage = new Image.asset('assets/flower.png');
 
+    });
+
+
+    //var address = new InternetAddress('172.16.32.73');
+    var address = new InternetAddress('127.0.0.1');
+    RawDatagramSocket.bind(address, 9003).then((udpSocket) {
+
+      //Waiting to receive data packet containing plant info
+      udpSocket.listen((e) {
+        print(e.toString());
+        Datagram dg = udpSocket.receive();
+        if(dg != null)
+          dg.data.forEach((x) => print(x));
+        //check if the "toString()" function works
+        //if(dg.data.contains(''))
+
+      });
     });
 
   }
@@ -138,7 +160,7 @@ class _MyHomePageState extends State<MyHomePage> {
         case 5:
           {
             _mainImage = new Image.asset('assets/flower.png');
-            _flowerName = 'Default Flower';
+            _plantName = 'Default Flower';
           }
           break;
         case 1:
@@ -165,13 +187,64 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
+  void updateData()
+  {
+    print('avatorMode Function');
+    //based on plant type
+    setState(() {
+      switch (_plantType) {
+        case 5:
+          {
+            _mainImage = new Image.asset('assets/flower.png');
+            _plantName = 'No Plant';
+            _waterLevel = 0.0;
+            _humidity = 0.0;
+            _temperature = 0.0;
+          }
+          break;
+        case 1:
+          {
+            _plantName = 'Violet';
+            _waterLevel = 45.6;
+            _humidity = 58.3;
+            _temperature = 27.1;
+          }
+          break;
+        case 2:
+          {
+            _plantName = 'Cactus';
+            _waterLevel = 29.4;
+            _humidity = 18.2;
+            _temperature = 37.4;
+          }
+          break;
+        case 3:
+          {
+            _plantName = 'Flower';
+            _waterLevel = 44.1;
+            _humidity = 39.7;
+            _temperature = 34.5;
+          }
+          break;
+        case 4:
+          {
+            _plantName = 'Grass';
+            _waterLevel = 52.1;
+            _humidity = 50.0;
+            _temperature = 25.3;
+          }
+          break;
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
 
       appBar: AppBar(
-          title: Text('Plant Type: ' + '$_flowerName'),
+          title: Text('Plant Type: ' + '$_plantName'),
           actions: <Widget>[
             // action button
             IconButton(
