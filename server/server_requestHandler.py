@@ -122,22 +122,13 @@ def server_timeout(s):
                 elif data == NACK:
                     print('Received NACK')
                     receive_NACK = True
-                elif data[:4] == UPDATE_COMMAND:
-                    print('Received updated id info, send back ACK')
-                    current_plant_id = set_plant_id(data[4:])
-                    database = 'demo.db'
-                    conn = create_connection(database)
-                    update_id_info(conn,current_plant_id)
-                    print('Data updated, current plant id is %d'%current_plant_id)
-                    server_socket.sendto(ACK.encode('utf-8'),address)
-                    receive_ACK = True
             except :
                 timeout = True               
                 break
         s.settimeout(None)
         return timeout
 
-def handle_timeout(s, addr):
+def handle_timeout(s, addr, data):
     cnt = 0
     while server_timeout(s) and cnt < 3:
         cnt = cnt + 1
@@ -167,7 +158,7 @@ while True:
                     server_socket.sendto(ACK.encode('utf-8'),address)
                     time.sleep(2)
                     server_socket.sendto(data.encode('utf-8'),client_address)
-                    handle_timeout(server_socket, client_address)                
+                    handle_timeout(server_socket, client_address, data)                
                 else:
                     print('Invalid water amount, send back NACK')
                     server_socket.sendto(NACK.encode('utf-8'),address)   
@@ -179,7 +170,7 @@ while True:
                     server_socket.sendto(ACK.encode('utf-8'),address)
                     time.sleep(2)
                     server_socket.sendto(data.encode('utf-8'),client_address)
-                    handle_timeout(server_socket, client_address)
+                    handle_timeout(server_socket, client_address, data)
                 else:
                     print('Invalid light amount, send back NACK')
                     server_socket.sendto(NACK.encode('utf-8'),address)   
@@ -187,10 +178,18 @@ while True:
             elif data[:4] == UPDATE_COMMAND:
                 print('Received update request.')
                 server_socket.sendto(ACK.encode('utf-8'),address)
-                #creat a json 
+                #send current conditions in json to the app 
+                msg = { }
+                msg['moisture'] = current_condition[0]
+                msg['lightLevel'] = current_condition[1]
+                msg['temperature']= current_condition[2]
+                msg['humidity']= current_condition[3]
+                msg['plant_id'] = current_plant_id
+                json_data = json.dumps(msg)
+                json_str = str(json_data)
                 time.sleep(2)
-                server_socket.sendto(data.encode('utf-8cdc'),client_address)
-                server_timeout(server_socket) 
+                server_socket.sendto(json_str.encode('utf-8'),app_address)                 
+                handle_timeout(server_socket, app_address, json_str)  
                 
             elif data[:4] == PLANTID_COMMAND:
                 print('Received plant id command.')
@@ -206,7 +205,7 @@ while True:
                     conn = create_connection(database)
                     #update ideal conditions
                     update_id_info(conn,current_plant_id)                
-                    handle_timeout(server_socket, app_address)          
+                    handle_timeout(server_socket, app_address, data)          
                 else:
                     print('Invalid plant id, send back NACK')
                     server_socket.sendto(NACK.encode('utf-8'),address)
@@ -218,7 +217,8 @@ while True:
                     print('Current light_level:%d' %current_condition[1])
                     print('Current humidity:%3.2f' %current_condition[2])
                     print('Current temperature:%3.2f' %current_condition[3])
-                    server_socket.sendto(data,app_address) 
+                    server_socket.sendto(data.encode('utf-8'),app_address) 
+                    handle_timeout(server_socket, app_address, data)   
                 else:
                     print('Invalid current updates, send back NACK')
                     server_socket.sendto(NACK.encode('utf-8'),address)
