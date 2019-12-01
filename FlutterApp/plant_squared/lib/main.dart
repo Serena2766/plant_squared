@@ -1,6 +1,66 @@
 import 'package:flutter/material.dart';
+import 'dart:io';
+import 'dart:convert';
 
-void main() => runApp(MyApp());
+/*
+Project Group T5
+Plant Squared
+Main developer: Jerry Xiong
+
+App for Monitoring and Controlling a plant
+ */
+
+
+//main function runs the app and awaits a UPD message
+void main() {
+
+  runApp(MyApp());
+
+  //var address = new InternetAddress('172.16.32.73');
+  var address = new InternetAddress('127.0.0.1');
+  RawDatagramSocket.bind(address, 9003).then((udpSocket) {
+
+    //Waiting to receive data packet containing plant info
+
+    udpSocket.listen((e) {
+      print(e.toString());
+      Datagram dg = udpSocket.receive();
+      if(dg != null)
+        dg.data.forEach((x) => print(x));
+      //check if the "toString()" function works
+      //if(dg.data.contains(''))
+
+    });
+  });
+}
+
+//Send UPD packets based on
+void _sendCommand(var x) {
+  print('send command function: '  + '$x');
+
+  //var data = "Hello, World";
+  var codec = new Utf8Codec();
+  //List<int> dataToSend = codec.encode(data);
+  List<int> dataToSend = codec.encode(x);
+  print(dataToSend);
+
+  //var address = new InternetAddress('172.16.32.73');
+  var address = new InternetAddress('127.0.0.1');
+  RawDatagramSocket.bind(address, 9003).then((udpSocket) {
+
+    udpSocket.send(dataToSend, new InternetAddress('172.16.32.73'), 9003);
+    print('Did send data on the stream..');
+  });
+}
+
+//Sends a UDP message requestions picture data
+//Receive picture data
+void _videoReceiver()
+{
+  
+
+}
+
 
 class MyApp extends StatelessWidget {
   // This widget is the root of your application.
@@ -9,15 +69,6 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // Try running your application with "flutter run". You'll see the
-        // application has a blue toolbar. Then, without quitting the app, try
-        // changing the primarySwatch below to Colors.green and then invoke
-        // "hot reload" (press "r" in the console where you ran "flutter run",
-        // or simply save your changes to "hot reload" in a Flutter IDE).
-        // Notice that the counter didn't reset back to zero; the application
-        // is not restarted.
         primarySwatch: Colors.blue,
       ),
       home: MyHomePage(title: 'Flutter Demo Home Page'),
@@ -28,14 +79,6 @@ class MyApp extends StatelessWidget {
 class MyHomePage extends StatefulWidget {
   MyHomePage({Key key, this.title}) : super(key: key);
 
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
 
   final String title;
 
