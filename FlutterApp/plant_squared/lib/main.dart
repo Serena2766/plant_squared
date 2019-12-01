@@ -53,13 +53,7 @@ void _sendCommand(var x) {
   });
 }
 
-//Sends a UDP message requestions picture data
-//Receive picture data
-void _videoReceiver()
-{
 
-
-}
 
 void _todo()
 {
@@ -99,7 +93,7 @@ class _MyHomePageState extends State<MyHomePage> {
   //              Variables
   //****************************************
   //The type of plant
-  int _plantType = 0;
+  int _plantType = 5; // start as N/A
 
   //The current conditions
   int _waterLevel = 0;
@@ -112,28 +106,85 @@ class _MyHomePageState extends State<MyHomePage> {
   int _idealHumidity = 0;
 
   //A default image to show
-  Image _mainImage = Image.asset('assets/flower.png');
+  Image _mainImage;
+  String _flowerName;
+
+  @override
+  initState(){
+    _mainImage = Image.asset('assets/flower.png');
+    _flowerName = 'Default Flower';
+  }
   //****************************************
+
+  //Sends a UDP message requestions picture data
+  //Receive picture data
+  void _videoReceiver()
+  {
+    print('videoReceiver Function');
+    //for now let's change the main image
+    setState(() {
+      _mainImage = new Image.asset('assets/flower.png');
+
+    });
+
+  }
+
+  void _avatarMode()
+  {
+    print('avatorMode Function');
+    //based on plant type
+    setState(() {
+      switch (_plantType) {
+        case 5:
+          {
+            _mainImage = new Image.asset('assets/flower.png');
+            _flowerName = 'Default Flower';
+          }
+          break;
+        case 1:
+          {
+            _mainImage = new Image.asset('assets/flower.png'); //todo update assets
+          }
+          break;
+        case 2:
+          {
+            _mainImage = new Image.asset('assets/flower.png');
+          }
+          break;
+        case 3:
+          {
+            _mainImage = new Image.asset('assets/flower.png');
+          }
+          break;
+        case 4:
+          {
+            _mainImage = new Image.asset('assets/flower.png');
+          }
+          break;
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
 
       appBar: AppBar(
-          title: Text('Plant Type: ' + '$_plantType',),
+          title: Text('Plant Type: ' + '$_flowerName'),
           actions: <Widget>[
             // action button
             IconButton(
               icon: new Image.asset('assets/Logo.png'),
               onPressed: () { //set to avatar mode
-                _todo;
+                _avatarMode();
               },
             ),
             // action button
             IconButton(
               icon: Icon(Icons.videocam),
               onPressed: () { // set to video mode
-                _todo;
+                _videoReceiver();
               },
             ),
           ]
