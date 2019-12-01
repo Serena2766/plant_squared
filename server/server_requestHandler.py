@@ -165,6 +165,11 @@ def handle_timeout(s, addr, data):
                 print('Something wrong with the server')    
 
 def int_to_bit(i):
+    """ 
+    Convert integer to bits
+    :param i: integer to be converted
+    :return: id in bits
+    """
     switcher={
         1:bit_list[0],
         2:bit_list[1],
@@ -175,6 +180,10 @@ def int_to_bit(i):
     return switcher.get(i,DEFAULT)    
 
 def take_care_plant(s):
+    """ 
+    Automatically water or set light to the plant every 60 seconds
+    :param s: server socket
+    """
     if not all(v == 0 for v in ideal_condition) and not all(v == 0 for v in current_condition):
         #water the plant if current moisture is below the ideal one
         if current_condition[0] < ideal_condition[0]:
@@ -273,15 +282,15 @@ while True:
             else:
                 if valid_current_info(data, current_condition):               
                 #handle if received a valid json message
-                    print('Received valid json message')
+                    print('Received valid json message, send back ACK')
                     server_socket.sendto(ACK.encode('utf-8'),address)
-                    print('Send back ACK')
                     print('Current conditions updated.')
                     print('Current moisture:%3.2f' %current_condition[0])
                     print('Current light_level:%d' %current_condition[1])
                     print('Current humidity:%3.2f' %current_condition[2])
                     print('Current temperature:%3.2f' %current_condition[3])
                     server_socket.sendto(data.encode('utf-8'),app_address) 
+                    print('Sent current info to the app')
                     handle_timeout(server_socket, app_address, data)   
                 else:
                     print('Invalid current updates, send back NACK')
@@ -290,4 +299,5 @@ while True:
         print('Exit the system.')
         raise       
 server_socket.close()
+timer.cancel()
 server_socket.shutdown(1)
