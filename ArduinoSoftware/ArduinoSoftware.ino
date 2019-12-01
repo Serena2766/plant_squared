@@ -18,7 +18,6 @@ DHT dht(DHTPIN, DHTTYPE);
 //Global variables
 int currentLightLevel = 0;
 bool isPlantPresent = false;
-bool wasPlantPresent = false;
 byte command = 0;
 
 void setup() {
@@ -43,15 +42,6 @@ void loop() {
 
  isPlantPresent = isPlantPresentFunc();
 
- if(isPlantPresent != wasPlantPresent){
-  //state of plant has changed (either the plant was added or removed from system)
-  //notify client Raspberry Pi and update wasPlantPresent variable to current reading
-  
-  Serial.println(String("{\"isPlantPresent\" : ") + String(isPlantPresent) + String("}"));
-  wasPlantPresent = isPlantPresent;
- }
-
- 
   //get and perform command
   if(Serial.available() > 0){
     //There is at least one command available
