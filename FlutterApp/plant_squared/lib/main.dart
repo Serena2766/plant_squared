@@ -57,11 +57,15 @@ void _sendCommand(var x) {
 //Receive picture data
 void _videoReceiver()
 {
-  
+
 
 }
 
+void _todo()
+{
 
+
+}
 class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
@@ -69,7 +73,10 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
-        primarySwatch: Colors.blue,
+        primarySwatch: Colors.green, //affects icon button
+
+        primaryColor: Colors.teal, //affects app bar
+        brightness: Brightness.light,
       ),
       home: MyHomePage(title: 'Flutter Demo Home Page'),
     );
@@ -87,68 +94,234 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
 
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
-  }
+  //****************************************
+  //              Variables
+  //****************************************
+  //The type of plant
+  int _plantType = 0;
 
+  //The current conditions
+  int _waterLevel = 0;
+  int _temperature = 0;
+  int _humidity = 0;
+
+  //The ideal conditions
+  int _idealWaterLevel = 0;
+  int _idealTemperature = 0;
+  int _idealHumidity = 0;
+
+  //A default image to show
+  Image _mainImage = Image.asset('assets/flower.png');
+  //****************************************
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
     return Scaffold(
+      backgroundColor: Colors.white,
+
       appBar: AppBar(
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-      ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Invoke "debug painting" (press "p" in the console, choose the
-          // "Toggle Debug Paint" action from the Flutter Inspector in Android
-          // Studio, or the "Toggle Debug Paint" command in Visual Studio Code)
-          // to see the wireframe for each widget.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Text(
-              'You have pushed the button this many times:',
+          title: Text('Plant Type: ' + '$_plantType',),
+          actions: <Widget>[
+            // action button
+            IconButton(
+              icon: new Image.asset('assets/Logo.png'),
+              onPressed: () { //set to avatar mode
+                _todo;
+              },
             ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.display1,
+            // action button
+            IconButton(
+              icon: Icon(Icons.videocam),
+              onPressed: () { // set to video mode
+                _todo;
+              },
+            ),
+          ]
+      ),
+
+      body: Center(
+
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: <Widget>[
+            Divider(
+              height: 10,
+            ),
+
+            new FlatButton( //main image
+              onPressed: _todo,
+              child: _mainImage,
+            ),
+
+            Divider(
+              height: 30,
+            ),
+            //List of plant data
+            Row( //heading
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: <Widget>[
+                  Text(
+                    'Metric: ',
+                    style: Theme.of(context).textTheme.display1,
+                  ),
+                  Text(
+                    'Current:',
+                    style: Theme.of(context).textTheme.display1,
+                  ),
+                  Text(
+                    'Ideal:',
+                    style: Theme.of(context).textTheme.display1,
+                  ),
+                ]
+            ),
+
+            Row( //water
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: <Widget>[
+                  Text(
+                    'Water:      ',
+                    style: Theme.of(context).textTheme.display1,
+                  ),
+                  Text(
+                    '$_waterLevel',
+                    style: Theme.of(context).textTheme.display1,
+                  ),
+                  Text(
+                    '$_idealWaterLevel',
+                    style: Theme.of(context).textTheme.display1,
+                  ),
+                ]
+            ),
+
+            Row( //temp
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: <Widget>[
+                  Text(
+                    'Temp:      ',
+                    style: Theme.of(context).textTheme.display1,
+                  ),
+                  Text(
+                    '$_temperature',
+                    style: Theme.of(context).textTheme.display1,
+                  ),
+                  Text(
+                    '$_idealTemperature',
+                    style: Theme.of(context).textTheme.display1,
+                  ),
+                ]
+            ),
+
+            Row( //humidity
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: <Widget>[
+                  Text(
+                    'Humidity:',
+                    style: Theme.of(context).textTheme.display1,
+                  ),
+                  Text(
+                    '$_humidity',
+                    style: Theme.of(context).textTheme.display1,
+                  ),
+                  Text(
+                    '$_idealHumidity',
+                    style: Theme.of(context).textTheme.display1,
+                  ),
+                ]
+            ),
+
+            Divider(
+              color: Colors.green,
+              thickness: 6,
+              height: 30,
+            ),
+            Row( //Row of control buttons
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: <Widget>[
+                  FloatingActionButton(
+                    onPressed: () => _sendCommand('00010000'),
+                    tooltip: 'Water 1',
+                    child: Icon(Icons.wb_cloudy),
+                    backgroundColor: Colors.blueAccent,
+                    foregroundColor: Colors.indigo,
+                  ),
+                  FloatingActionButton(
+                    onPressed: () => _sendCommand(00010001),
+                    tooltip: 'Water 2',
+                    child: Icon(Icons.wb_cloudy),
+                    backgroundColor: Colors.blueAccent,
+                    foregroundColor: Colors.indigo,
+                  ),
+                  FloatingActionButton(
+                    onPressed: () => _sendCommand(00010010),
+                    tooltip: 'Water 3',
+                    child: Icon(Icons.wb_cloudy),
+                    backgroundColor: Colors.blueAccent,
+                    foregroundColor: Colors.indigo,
+                  ),
+                  FloatingActionButton(
+                    onPressed: () => _sendCommand(00010011),
+                    tooltip: 'Water 4',
+                    child: Icon(Icons.wb_cloudy),
+                    backgroundColor: Colors.blueAccent,
+                    foregroundColor: Colors.indigo,
+                  ),
+                  FloatingActionButton(
+                    onPressed: () => _sendCommand(00010100),
+                    tooltip: 'Water 5',
+                    child: Icon(Icons.wb_cloudy),
+                    backgroundColor: Colors.blueAccent,
+                    foregroundColor: Colors.indigo,
+                  ),
+
+
+                ]
+            ),
+            Row( //Row of control buttons
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: <Widget>[
+                  FloatingActionButton(
+                    onPressed: () => _sendCommand(00100000),
+                    tooltip: 'Brightness 1',
+                    child: Icon(Icons.brightness_3),
+                    backgroundColor: Colors.black,
+                    foregroundColor: Colors.blueGrey,
+                  ),
+                  FloatingActionButton(
+                    onPressed: () => _sendCommand(00100001),
+                    tooltip: 'Brightness 2',
+                    child: Icon(Icons.brightness_2),
+                    backgroundColor: Colors.black45,
+                    foregroundColor: Colors.white30,
+                  ),
+                  FloatingActionButton(
+                    onPressed: () => _sendCommand(00100010),
+                    tooltip: 'Brightness 3',
+                    child: Icon(Icons.brightness_1),
+                    backgroundColor: Colors.black26,
+                    foregroundColor: Colors.white,
+                  ),
+                  FloatingActionButton(
+                    onPressed: () => _sendCommand(00100011),
+                    tooltip: 'Brightness 4',
+                    child: Icon(Icons.brightness_4),
+                    backgroundColor: Colors.white,
+                    foregroundColor: Colors.deepOrange,
+                  ),
+                  FloatingActionButton(
+                    onPressed: () => _sendCommand(00100100),
+                    tooltip: 'Brightness 5',
+                    child: Icon(Icons.brightness_5),
+                    backgroundColor: Colors.white,
+                    foregroundColor: Colors.red,
+                  ),
+
+                ]
             ),
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
+
+
 }
