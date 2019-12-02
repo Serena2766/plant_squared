@@ -12,7 +12,7 @@ class ImageServer:
     UPDATE_COMMAND = '0111'
     ACK = '01100001'
     NACK = '01101110'
-    IDEN_INTERVAL = 5
+    IDEN_INTERVAL = 30
     RETRIES = 5
     def __init__(self, send, recv, ard_port, baud=9600):
         print("Binding Server ... ")
@@ -41,28 +41,35 @@ class ImageServer:
         """
         The main server loop
         """
+        print("Running Server")
         self.s.setblocking(0)
         last_checked_id = int(time.time())
         last_checked_conditions = int(time.time())
+        last_cmd = int(time.time())
         while True:
             try:
-                data, address = self.s.recv(1024)
+                data, address = self.s.recvfrom(1024)
                 if self.process_command(data.decode()):
-                    self.s.sento(self.ACK.encode("utf-8"), self.server_address)
+                    self.s.sendto(self.ACK.encode("utf-8"), self.server_address)
                 else:
                     self.s.sento(self.NACK.encode("utf-8"), self.server_address)
             except BlockingIOError:
                 pass
 
-            # Every n seconds we try to re-identify the plant, update the server when required
-            if (int(time.time()) - last_checked_id) > self.IDEN_INTERVAL:
-                last_checked_id = int(time.time())
-                is_new = self.re_identify()
-                if is_new:
-                    self.update_plant_id()
-            
-            if (int(time.time()) - last_checked_conditions) > self.IDEN_INTERVAL:
-                self.update_server()
+
+            if (int(time.time()) - last_cmd) > self.IDEN_INTERVAL: # Space cmds by 60 s
+                if (int(time.time()) - last_checked_id) >= ((time.time()) - last_checked_conditions):
+                    print("Re-identifying plant")
+                    last_checked_id = int(time.time())
+                    is_new = self.re_identify()
+                    if is_new:
+                        self.update_plant_id()
+                else:
+                    print("Sending condition update to server")
+                    self.update_server()
+                    last_checked_conditions = int(time.time())
+                    
+                last_cmd = int(time.time())
 
 
     def wait_ack(self):
@@ -79,6 +86,7 @@ class ImageServer:
             print("Got ack ...")
             return True
         else:
+            print(data)
             print("Unkown return while waiting for ack")
             return False
 
@@ -102,7 +110,7 @@ class ImageServer:
             print(f"Retrying {self.RETRIES-i}")
         else:
             return False
-
+        print("Done updating plant id")
         return True
 
 
@@ -117,19 +125,21 @@ class ImageServer:
         Called to update server with up to date data
         """
         conditions = self.arduino.updateData()
+        print(conditions)
         if conditions == "error":
             print("Could not get updated data from arduino")
             return False
         else:
             for i in range(self.RETRIES):
-                self.s.sento(conditions.encode("utf-8"),
-                             self.server_address)
+                self.s.sendto(conditions.encode("utf-8"),
+                              self.server_address)
                 if self.wait_ack():
                     break
                 print(f"Retrying ... {self.RETRIES - i}")
             else:
                 print("Max update retried exceeded ...")
                 return False
+        print("Done updating server")
         return True
 
 
@@ -147,7 +157,7 @@ class ImageServer:
                 
         elif data[:4] == self.LIGHT_COMMAND:
             print('Received light command.')  
-            light_set self.arduino.setLightLevel(int(data[4:], 2))
+            light_set = self.arduino.setLightLevel(int(data[4:], 2))
             if light_set:
                 self.s.sento(self.ACK.encode("utf-8"), self.server_address)
             else:
@@ -159,5 +169,5 @@ class ImageServer:
 if __name__ == "__main__":
     RECV_PORT = 9003
     SEND_PORT = 8001
-    server = ImageServer(SEND_PORT, RECV_PORT)
-    server.update_plant_id()
+    server = ImageServer(SEND_PORT, RECV_PORT, "/dev/ttyACM0")
+    server.run_server()
