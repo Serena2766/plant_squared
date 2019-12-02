@@ -1,6 +1,7 @@
 # author Xinrui Zhang
 # version 12.1.2019
 import socket, sys, time, threading, json
+from timeit import Timer
 import sqlite3
 from sqlite3 import Error
 
@@ -200,10 +201,14 @@ def take_care_plant(s):
             print('Sent set light_level to the client ')
             handle_timeout(s, client_address, data)
             
-t = Timer(60.0, take_care_plant(server_socket))
-t.start()
-
+# t = Timer(60.0, take_care_plant(server_socket))
+# t.start()
+auto_check = 0
 while True:
+    auto_check = auto_check + 1
+    if auto_check == 10:
+        take_care_plant(server_socket)
+        auto_check = 0
     #listen on the port            
     try:       
         print ("\nListening on port %d : press Ctrl-C to stop " % server_port)
