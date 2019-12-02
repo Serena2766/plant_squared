@@ -193,6 +193,8 @@ def take_care_plant(s):
             s.sendto(data.encode('utf-8'), client_address)  
             print('Sent water the plant to the client ')
             handle_timeout(s, client_address, data)
+        else:
+            print('Auto check: the plant grows well with sufficient water ')
         #set the light level if current light_level is not the ideal one    
         if not current_condition[1] == ideal_condition[1]:
             print('Auto check: the plant needs lights ')
@@ -200,9 +202,9 @@ def take_care_plant(s):
             s.sendto(data.encode('utf-8'), client_address)  
             print('Sent set light_level to the client ')
             handle_timeout(s, client_address, data)
+        else:
+            print('Auto check: the plant grows well with sufficient lightness ') 
             
-# t = Timer(60.0, take_care_plant(server_socket))
-# t.start()
 auto_check = 0
 while True:
     auto_check = auto_check + 1
@@ -302,7 +304,7 @@ while True:
                     server_socket.sendto(NACK.encode('utf-8'),address)
     except (KeyboardInterrupt,SystemExit):
         print('Exit the system.')
-        raise       
+        pass 
+        break      
 server_socket.close()
-timer.cancel()
 server_socket.shutdown(1)
