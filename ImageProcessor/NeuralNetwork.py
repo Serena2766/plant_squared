@@ -37,8 +37,11 @@ class NeuralNetwork:
 
         self.IMG_SIZE = 224
         self.device = torch.device("cpu") # This will always be CPU on a Pi
+        print("Loading torch model ... ")
         self.model=torch.load(model_path)
+        print("Running model eval ...")
         self.model.eval()
+        print("Creating PIL transforms ... ")
         self.to_pil = transforms.ToPILImage()
         self.test_transforms = transforms.Compose(
             [transforms.Resize(self.IMG_SIZE),

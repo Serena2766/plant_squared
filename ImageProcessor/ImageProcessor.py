@@ -23,6 +23,7 @@ class ImageProcessor:
             raise TypeError("Model path must be a valid path object")
         elif not model_path.exists():
             raise FileNotFoundError("Path for model does not exist")
+        print("Creating neural network ... ")
         self.neural_net = NeuralNetwork(model_path)
 
         if self.neural_net is None:
