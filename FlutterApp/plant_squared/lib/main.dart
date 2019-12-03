@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'dart:io';
 import 'dart:convert';
 
+
+
 /*
 Project Group T5
 Plant Squared
@@ -18,22 +20,44 @@ void main() {
 }
 
 //Send UPD packets based on user command is given
-void _sendCommand(var x) {
+void _sendCommand(String x) {
   print('send command function: '  + '$x');
-
   //var data = "Hello, World";
   var codec = new Utf8Codec();
   //List<int> dataToSend = codec.encode(data);
   List<int> dataToSend = codec.encode(x);
+  //var dataToSend = utf8.encode(x);
   print('$dataToSend');
 
-  //var address = new InternetAddress('172.16.32.73');
-  var address = new InternetAddress('127.0.0.1');
-  RawDatagramSocket.bind(address, 9003).then((udpSocket) {
+  var localHostAddress = new InternetAddress('127.0.0.1'); //normal alias for localhost
+  var phoneAdress = new InternetAddress('172.17.159.16');
+  var address = new InternetAddress('172.17.76.198'); //ip of laptop
 
-    udpSocket.send(dataToSend, new InternetAddress('172.16.32.73'), 9003);
-    print('Did send data on the stream..');
+  //var address = new InternetAddress('10.0.2.2'); //alias for laptop from emulator (apparently)
+  //var address = new InternetAddress('10.0.2.2'); //alias
+  //var address = new InternetAddress('172.17.76.198');
+  //10.0.3.2
+
+  RawDatagramSocket.bind(phoneAdress, 9003).then((RawDatagramSocket udpSocket) {
+    //udpSocket.writeEventsEnabled = true;
+    //udpSocket.send(dataToSend, new InternetAddress('192.168.4.1'), 8001);
+    //updSocket.send(dataToSend, new InternetAddress('127.0.0.1'), 8001);
+    //updSocket.send(dataToSend, new InternetAddress('172.17.86.227'), 8001);
+    udpSocket.send(dataToSend, address, 8001);
+    print('Sent data on the stream...');
+
+    //Waiting to receive data packet containing plant info
+    udpSocket.listen((e) {
+      print(e.toString());
+      Datagram dg = udpSocket.receive();
+      if(dg != null){
+        dg.data.forEach((x) => print(x));
+        //check if the "toString()" function works
+        //if(dg.data.contains(''))
+        print('received something not null');
+      }
   });
+});
 }
 
 
@@ -76,18 +100,23 @@ class _MyHomePageState extends State<MyHomePage> {
   //Function for setting up the connection for receiving data
   void setUpSocket()
   {
+    var phoneAddress = new InternetAddress('172.17.159.16');
     //var address = new InternetAddress('172.16.32.73');
-    var address = new InternetAddress('127.0.0.1');
-    RawDatagramSocket.bind(address, 9003).then((udpSocket) {
+    var address = new InternetAddress('172.17.76.198');
+    RawDatagramSocket.bind(phoneAddress, 9003).then((udpSocket) {
 
+      print('Listening for a packet');
       //Waiting to receive data packet containing plant info
       udpSocket.listen((e) {
         print(e.toString());
         Datagram dg = udpSocket.receive();
-        if(dg != null)
+        if(dg != null){
           dg.data.forEach((x) => print(x));
-        //check if the "toString()" function works
-        //if(dg.data.contains(''))
+          //check if the "toString()" function works
+          //if(dg.data.contains(''))
+          print('received something not null');
+        }
+
 
       });
     });
@@ -112,46 +141,18 @@ class _MyHomePageState extends State<MyHomePage> {
   //Central image and name of plant
   Image _mainImage;
   String _plantName;
+  String _mainText = ' ';
 
   @override
   initState(){
-    _mainImage = Image.asset('assets/flower.png');
+    _mainImage = Image.asset('assets/Logo.png');
     _plantName = 'Default Flower';
-    setUpSocket(); //jx Not sure if here
+    setUpSocket();
   }
   //****************************************
 
-  //Sends a UDP message requests picture data
-  //Receive picture data
-  void _videoReceiver()
-  {
-    print('videoReceiver Function');
-    //for now let's change the main image
-    setState(() {
-      _mainImage = new Image.asset('assets/flower.png');
 
-    });
-
-
-    //var address = new InternetAddress('172.16.32.73');
-    var address = new InternetAddress('127.0.0.1');
-    RawDatagramSocket.bind(address, 9003).then((udpSocket) {
-
-      //Waiting to receive data packet containing plant info
-      udpSocket.listen((e) {
-        print(e.toString());
-        Datagram dg = udpSocket.receive();
-        if(dg != null)
-          dg.data.forEach((x) => print(x));
-        //check if the "toString()" function works
-        //if(dg.data.contains(''))
-
-      });
-    });
-
-  }
-
-  void _avatarMode()
+  void _avatarUpdate()
   {
     print('avatorMode Function');
     //based on plant type
@@ -159,7 +160,7 @@ class _MyHomePageState extends State<MyHomePage> {
       switch (_plantType) {
         case 5:
           {
-            _mainImage = new Image.asset('assets/flower.png');
+            _mainImage = new Image.asset('assets/Logo.png');
             _plantName = 'Default Flower';
           }
           break;
@@ -245,22 +246,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
       appBar: AppBar(
           title: Text('Plant Type: ' + '$_plantName'),
-          actions: <Widget>[
-            // action button
-            IconButton(
-              icon: new Image.asset('assets/Logo.png'),
-              onPressed: () { //set to avatar mode
-                _avatarMode();
-              },
-            ),
-            // action button
-            IconButton(
-              icon: Icon(Icons.videocam),
-              onPressed: () { // set to video mode
-                _videoReceiver();
-              },
-            ),
-          ]
+
       ),
 
       body: Center(
@@ -278,9 +264,18 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
 
             Divider(
-              height: 30,
+              height: 10,
             ),
             //List of plant data
+
+            Text(
+              '$_mainText',
+              style: Theme.of(context).textTheme.display1,
+            ),
+
+            Divider(
+              height: 10,
+            ),
             Row( //heading
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: <Widget>[
@@ -304,15 +299,15 @@ class _MyHomePageState extends State<MyHomePage> {
                 children: <Widget>[
                   Text(
                     'Water:      ',
-                    style: Theme.of(context).textTheme.display1,
+                    style: Theme.of(context).textTheme.headline,
                   ),
                   Text(
                     '$_waterLevel',
-                    style: Theme.of(context).textTheme.display1,
+                    style: Theme.of(context).textTheme.headline,
                   ),
                   Text(
                     '$_idealWaterLevel',
-                    style: Theme.of(context).textTheme.display1,
+                    style: Theme.of(context).textTheme.headline,
                   ),
                 ]
             ),
@@ -322,15 +317,15 @@ class _MyHomePageState extends State<MyHomePage> {
                 children: <Widget>[
                   Text(
                     'Temp:      ',
-                    style: Theme.of(context).textTheme.display1,
+                    style: Theme.of(context).textTheme.headline,
                   ),
                   Text(
                     '$_temperature',
-                    style: Theme.of(context).textTheme.display1,
+                    style: Theme.of(context).textTheme.headline,
                   ),
                   Text(
                     '$_idealTemperature',
-                    style: Theme.of(context).textTheme.display1,
+                    style: Theme.of(context).textTheme.headline,
                   ),
                 ]
             ),
@@ -340,15 +335,15 @@ class _MyHomePageState extends State<MyHomePage> {
                 children: <Widget>[
                   Text(
                     'Humidity:',
-                    style: Theme.of(context).textTheme.display1,
+                    style: Theme.of(context).textTheme.headline,
                   ),
                   Text(
                     '$_humidity',
-                    style: Theme.of(context).textTheme.display1,
+                    style: Theme.of(context).textTheme.headline,
                   ),
                   Text(
                     '$_idealHumidity',
-                    style: Theme.of(context).textTheme.display1,
+                    style: Theme.of(context).textTheme.headline,
                   ),
                 ]
             ),
@@ -358,39 +353,39 @@ class _MyHomePageState extends State<MyHomePage> {
               thickness: 6,
               height: 30,
             ),
-            Row( //Row of control buttons
+            Row( //Row of control buttons for water
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: <Widget>[
                   FloatingActionButton(
-                    onPressed: () => _sendCommand('00010000'),
+                    onPressed: () => _sendCommand('00010001'),
                     tooltip: 'Water 1',
                     child: Icon(Icons.wb_cloudy),
                     backgroundColor: Colors.blueAccent,
                     foregroundColor: Colors.indigo,
                   ),
                   FloatingActionButton(
-                    onPressed: () => _sendCommand(00010001),
+                    onPressed: () => _sendCommand('00010010'),
                     tooltip: 'Water 2',
                     child: Icon(Icons.wb_cloudy),
                     backgroundColor: Colors.blueAccent,
                     foregroundColor: Colors.indigo,
                   ),
                   FloatingActionButton(
-                    onPressed: () => _sendCommand(00010010),
+                    onPressed: () => _sendCommand('00010011'),
                     tooltip: 'Water 3',
                     child: Icon(Icons.wb_cloudy),
                     backgroundColor: Colors.blueAccent,
                     foregroundColor: Colors.indigo,
                   ),
                   FloatingActionButton(
-                    onPressed: () => _sendCommand(00010011),
+                    onPressed: () => _sendCommand('00010100'),
                     tooltip: 'Water 4',
                     child: Icon(Icons.wb_cloudy),
                     backgroundColor: Colors.blueAccent,
                     foregroundColor: Colors.indigo,
                   ),
                   FloatingActionButton(
-                    onPressed: () => _sendCommand(00010100),
+                    onPressed: () => _sendCommand('00010101'),
                     tooltip: 'Water 5',
                     child: Icon(Icons.wb_cloudy),
                     backgroundColor: Colors.blueAccent,
@@ -404,35 +399,35 @@ class _MyHomePageState extends State<MyHomePage> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: <Widget>[
                   FloatingActionButton(
-                    onPressed: () => _sendCommand(00100000),
+                    onPressed: () => _sendCommand('00100001'),
                     tooltip: 'Brightness 1',
                     child: Icon(Icons.brightness_3),
                     backgroundColor: Colors.black,
                     foregroundColor: Colors.blueGrey,
                   ),
                   FloatingActionButton(
-                    onPressed: () => _sendCommand(00100001),
+                    onPressed: () => _sendCommand('00100010'),
                     tooltip: 'Brightness 2',
                     child: Icon(Icons.brightness_2),
                     backgroundColor: Colors.black45,
                     foregroundColor: Colors.white30,
                   ),
                   FloatingActionButton(
-                    onPressed: () => _sendCommand(00100010),
+                    onPressed: () => _sendCommand('00100011'),
                     tooltip: 'Brightness 3',
                     child: Icon(Icons.brightness_1),
                     backgroundColor: Colors.black26,
                     foregroundColor: Colors.white,
                   ),
                   FloatingActionButton(
-                    onPressed: () => _sendCommand(00100011),
+                    onPressed: () => _sendCommand('00100100'),
                     tooltip: 'Brightness 4',
                     child: Icon(Icons.brightness_4),
                     backgroundColor: Colors.white,
                     foregroundColor: Colors.deepOrange,
                   ),
                   FloatingActionButton(
-                    onPressed: () => _sendCommand(00100100),
+                    onPressed: () => _sendCommand('00100101'),
                     tooltip: 'Brightness 5',
                     child: Icon(Icons.brightness_5),
                     backgroundColor: Colors.white,
