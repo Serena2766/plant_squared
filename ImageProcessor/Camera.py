@@ -54,6 +54,3 @@ class Camera:
             if not ret_val:  # Camera has said something is wrong
                 raise RuntimeError("Camera encountered error :(")
             return img
-
-
-cv2.destroyAllWindows()

@@ -1,4 +1,4 @@
-import socket, sys, time, datetime, json
+import socket, sys, time, datetime, json, cv2, pickle, zlib, struct
 from pathlib import Path
 from ImageProcessor import ImageProcessor
 from Camera import Camera
@@ -6,6 +6,9 @@ from ArduinoPlant import ArduinoPlant
 
 
 class ImageServer:
+    """image server is responsible for sending data to both the servers
+    plant management database as well as the video streaming service
+    """
     WATER_COMMAND = '0001'
     LIGHT_COMMAND = '0010'
     PLANTID_COMMAND = '0100'
@@ -14,11 +17,19 @@ class ImageServer:
     NACK = '01101110'
     IDEN_INTERVAL = 30
     RETRIES = 5
-    def __init__(self, send, recv, ard_port, baud=9600):
-        print("Binding Server ... ")
+    ENCODING = [int(cv2.IMWRITE_JPEG_QUALITY), 90] # Quality affects stream rate
+
+    def __init__(self, send, recv, stream=1337, ard_port="/dev/ttyACM0", baud=9600):
+        print("Binding Server Ports ... ")
         self.send_port = send
         self.recv_port = recv
         self.s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
+        print("Binding video streaming service")
+        self.stream_port = stream
+        self.stream = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.stream.connect(("localhost", self.stream_port))
+        self.connection = self.stream.makefile("wb")
 
         # Start listening
         my_address = ('localhost', recv)
@@ -28,13 +39,34 @@ class ImageServer:
 
         print("Setting up image processor ... ")
         # Set up image processing
-        self.cam = Camera(True, Path("./data/imgs/plants/1/1-cc-0.jpg"))
+        #self.cam = Camera(True, Path("./data/imgs/plants/1/1-cc-0.jpg"))
+        self.cam = Camera()
         self.identifier = ImageProcessor(Path("./plant_model.pth"))
+
         print("Binding camera ... ")
         assert self.identifier._assign_camera(self.cam)
 
         print("Connecting to arduino ... ")
-        self.arduino = ArduinoPlant(ard_port, baud)
+        try:
+            self.arduino = ArduinoPlant(ard_port, baud)
+        except:
+            print("Arduino not found")
+            self.arduino = None
+
+
+    def stream_frame(self) -> int:
+        """Encodes and streams one frame to the client
+        
+        :return: The time it took to encode and stream the frame in s
+        """
+        start_time = time.time()
+        frame = self.cam.requestData()
+        res, frame = cv2.imencode(".jpg", frame, self.ENCODING)
+        frame_data = pickle.dumps(frame, 0)
+        size = len(frame_data) # We need this to tell the client how far to read
+
+        self.stream.sendall(struct.pack(">L", size) + frame_data)
+        return time.time() - start_time
     
 
     def run_server(self):
@@ -52,7 +84,7 @@ class ImageServer:
                 if self.process_command(data.decode()):
                     self.s.sendto(self.ACK.encode("utf-8"), self.server_address)
                 else:
-                    self.s.sento(self.NACK.encode("utf-8"), self.server_address)
+                    self.s.sendto(self.NACK.encode("utf-8"), self.server_address)
             except BlockingIOError:
                 pass
 
@@ -70,6 +102,8 @@ class ImageServer:
                     last_checked_conditions = int(time.time())
                     
                 last_cmd = int(time.time())
+            
+            self.stream_frame()
 
 
     def wait_ack(self):
@@ -124,7 +158,11 @@ class ImageServer:
         """
         Called to update server with up to date data
         """
-        conditions = self.arduino.updateData()
+        try:
+            conditions = self.arduino.updateData()
+        except:
+            print("Update server could not access arduino")
+            return False
         print(conditions)
         if conditions == "error":
             print("Could not get updated data from arduino")
@@ -169,5 +207,5 @@ class ImageServer:
 if __name__ == "__main__":
     RECV_PORT = 9003
     SEND_PORT = 8001
-    server = ImageServer(SEND_PORT, RECV_PORT, "/dev/ttyACM0")
+    server = ImageServer(SEND_PORT, RECV_PORT)
     server.run_server()
