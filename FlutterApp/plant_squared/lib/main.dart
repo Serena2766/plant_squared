@@ -123,6 +123,7 @@ class _MyHomePageState extends State<MyHomePage> {
   //Reset
   reset()
   {
+    print('Reset Content');
     setState(() {
       _mainImage = new Image.asset('assets/Logo.png');
       _plantName = 'No Plant';
@@ -170,18 +171,18 @@ class _MyHomePageState extends State<MyHomePage> {
 
           var codec = new Utf8Codec();
           String str = codec.decode(dg.data);
-          print('received something not null = ');
+          print('Received Data = ');
           print(str);
           if(str.startsWith(ACK))
           {
-            print('Got the Ack all is well... ');
+            print('Received Ack ');
             _mainText = 'Command Received by Server';
             updateData();
             clearTextAfter();
           }
           else if(str.startsWith(NACK))
             {
-              print('Got a Nack ');
+              print('Received Nack ');
               _mainText = 'Command Not Recognized!';
               clearTextAfter();
             }
@@ -317,7 +318,7 @@ class _MyHomePageState extends State<MyHomePage> {
             },
     )]
     ),
-      
+
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
