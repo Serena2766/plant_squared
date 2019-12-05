@@ -130,11 +130,10 @@ class _MyHomePageState extends State<MyHomePage> {
       _idealWaterLevel = 0.0;
       _idealHumidity = 0.0;
       _idealTemperature = 0.0;
-      _idealWaterLevel = 0.0;
-      _idealHumidity = 0.0;
-      _idealTemperature = 0.0;
+      _waterLevel = 0.0;
+      _humidity = 0.0;
+      _temperature = 0.0;
       clearTextAfter();
-
     });
   }
 
@@ -226,7 +225,7 @@ class _MyHomePageState extends State<MyHomePage> {
               _idealWaterLevel = 0.0;
               _idealHumidity = 0.0;
               _idealTemperature = 0.0;
-              _mainText = 'Plant Data Updated';
+              //_mainText = 'Plant Data Updated';
               clearTextAfter();
             });
           }
@@ -273,7 +272,7 @@ class _MyHomePageState extends State<MyHomePage> {
         case 4:
           {
             setState(() {
-              _mainImage = new Image.asset('assets/africanviolet.png');
+              _mainImage = new Image.asset('assets/africanviolet.jpg');
               _plantName = 'Flower';
               _idealWaterLevel = 52.1;
               _idealHumidity = 50.0;
