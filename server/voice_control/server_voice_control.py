@@ -14,8 +14,10 @@ my_address = (my_ip, my_port)
 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 box_name = ['box one', 'my lovely flower','cauliflower']
 s.bind(my_address)
+
 def instruction():
-    print('Please say one of the following command to active the plant square')
+    '''print out instructions'''
+    print('Please say one of the following command to active the plant squared')
     print('-Water the plant')
     print('-Turn on the light')
     print('-Turn off the light\n')
@@ -29,10 +31,10 @@ def interrupt_callback():
     return interrupted
 
 def active_google_s2t():
+    '''active google speech API to identify the box name'''
     print("---Google speech2text activated---")
     # Activate Google speech recognize
     r = sr.Recognizer()
-
     with sr.Microphone() as source:
         try:
             print("Please say the box name:")
@@ -57,7 +59,10 @@ def send_command(command_num, amount):
     # address = (server_ip, server_port)
     # data = command_num + amount
     # send_socket.sendto(data.encode('utf-8'), address)
-
+    ''' send respective commands to the server system
+        para command_num: the command code
+        para amount: the amount in bits
+    '''
     data = command_num + amount
     s.sendto(data.encode('utf-8'), server_address)
     print("Send to the server!")
@@ -74,6 +79,7 @@ def send_command(command_num, amount):
 
 
 def water_the_plant():
+    '''water the plant callback function'''
     print("=====Detected: water the plant=====")
     if active_google_s2t():
         send_command('0001','0001')
@@ -82,6 +88,7 @@ def water_the_plant():
         instruction()
 
 def turn_on_the_light():
+    '''turn on the light callback function'''
     print("=====Detected: turn on the light=====")
     if active_google_s2t():
         send_command('0010','0001')
@@ -90,6 +97,7 @@ def turn_on_the_light():
         instruction()
 
 def turn_off_the_light():
+    '''turn off the light callback function'''
     print("=====Detected: turn off the light=====")
     if active_google_s2t():
         send_command('0010','0000')
@@ -98,19 +106,14 @@ def turn_off_the_light():
         instruction()
 
 models = ['resources/water_the_plant.pmdl', 'resources/turn_on_the_light.pmdl', 'resources/turn_off_the_light.pmdl']
-
 # capture SIGINT signal, e.g., Ctrl+C
 signal.signal(signal.SIGINT, signal_handler)
-
 sensitivity = [0.5]*len(models)
+#initialize a snowboy detector with specified models
 detector = snowboydecoder.HotwordDetector(models, sensitivity=sensitivity)
-
 commands = [water_the_plant,turn_on_the_light,turn_off_the_light]
 print('\nListening... Press Ctrl+C to exit')
-print('Please say one of the following command to active the plant square')
-print('-Water the plant')
-print('-Turn on the light')
-print('-Turn off the light')
+instruction()
 
 # main loop
 # if detected one of the commands then call the respective callback function
