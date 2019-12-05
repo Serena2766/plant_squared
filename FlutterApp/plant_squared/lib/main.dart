@@ -28,11 +28,11 @@ Adjust Light (5 levels)
 //      Global Variables
 //....................................
 // App connection set up
-var phoneIP = new InternetAddress('192.168.1.110');
+var phoneIP = new InternetAddress('192.168.43.105');
 var phonePort = 9003;
 
 // Server connection set uo
-var serverIP = new InternetAddress('192.168.1.102');
+var serverIP = new InternetAddress('192.168.43.129');
 var serverPort = 8001;
 
 // Encoded Responses
@@ -120,6 +120,23 @@ class _MyHomePageState extends State<MyHomePage> {
   }
   //****************************************
 
+  //Reset
+  reset()
+  {
+    setState(() {
+      _mainImage = new Image.asset('assets/Logo.png');
+      _plantName = 'No Plant';
+      _idealWaterLevel = 0.0;
+      _idealHumidity = 0.0;
+      _idealTemperature = 0.0;
+      _idealWaterLevel = 0.0;
+      _idealHumidity = 0.0;
+      _idealTemperature = 0.0;
+      clearTextAfter();
+
+    });
+  }
+
   //Clearing the main text
   clearMainText()
   {
@@ -166,6 +183,7 @@ class _MyHomePageState extends State<MyHomePage> {
             {
               print('Got a Nack ');
               _mainText = 'Command Not Recognized!';
+              clearTextAfter();
             }
           else
             {
@@ -208,6 +226,7 @@ class _MyHomePageState extends State<MyHomePage> {
               _idealHumidity = 0.0;
               _idealTemperature = 0.0;
               _mainText = 'Plant Data Updated';
+              clearTextAfter();
             });
           }
           break;
@@ -220,6 +239,7 @@ class _MyHomePageState extends State<MyHomePage> {
               _idealHumidity = 18.2;
               _idealTemperature = 37.4;
               _mainText = 'Plant Data Updated';
+              clearTextAfter();
             });
           }
           break;
@@ -232,18 +252,20 @@ class _MyHomePageState extends State<MyHomePage> {
               _idealHumidity = 39.7;
               _idealTemperature = 34.5;
               _mainText = 'Plant Data Updated';
+              clearTextAfter();
             });
           }
           break;
         case 3:
           {
             setState(() {
-              _mainImage = new Image.asset('assets/grass.png');
+              _mainImage = new Image.asset('assets/jade.png');
               _plantName = 'Jade';
               _idealWaterLevel = 52.1;
               _idealHumidity = 50.0;
               _idealTemperature = 25.3;
               _mainText = 'Plant Data Updated';
+              clearTextAfter();
             });
           }
           break;
@@ -255,13 +277,25 @@ class _MyHomePageState extends State<MyHomePage> {
               _idealWaterLevel = 52.1;
               _idealHumidity = 50.0;
               _idealTemperature = 25.3;
+              _mainText = 'Plant Data Updated';
+              clearTextAfter();
             });
           }
           break;
         default: {
-          _mainText = 'Received bad plant type';
+
+          setState(() {
+            _mainText = 'Received bad plant type';
+            _plantName = 'No Plant';
+            _mainImage = new Image.asset('assets/Logo.png');
+            _idealWaterLevel = 0.0;
+            _idealHumidity = 0.0;
+            _idealTemperature = 0.0;
+            clearTextAfter();
+          });
           print('Received bad plant type = ');
           print(_plantType);
+          print('Set to default');
         }
       }
   }
@@ -274,8 +308,16 @@ class _MyHomePageState extends State<MyHomePage> {
 
       appBar: AppBar(
           title: Text('Plant Type: ' + '$_plantName'),
-
-      ),
+          actions: <Widget>[
+      // action button
+            IconButton(
+            icon: Icon(Icons.autorenew),
+            onPressed: () { //set to avatar mode
+              reset();
+            },
+    )]
+    ),
+      
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,

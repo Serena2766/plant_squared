@@ -54,6 +54,7 @@ flutter:
     - assets/watericon3.png
     - assets/watericon4.png
     - assets/watericon5.png
+    - assets/jade.png
 
 
   # An image asset can refer to one or more resolution-specific "variants", see
