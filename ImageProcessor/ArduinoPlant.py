@@ -6,6 +6,7 @@ class ArduinoPlant:
     MAX_WATER_LEVEL = 5
     MAX_LIGHT_LEVEL = 5
     MIN_LEVEL = 0
+    MIN_MESSAGE_LENGTH = 50
     
     def __init__(self, port, baudrate):
         self.port = port
@@ -50,36 +51,32 @@ class ArduinoPlant:
         
         #send command and wait for ack
         commandReceived = False
-        commandTries = 10
-        while(commandTries > 0 and commandReceived == False):
+        tries = numTries
+        while(tries > 0 and commandReceived == False):
             self.serialConnection.write(b'\x70')
             time.sleep(1)
             if self.serialConnection.in_waiting > 0:
                 if self.serialConnection.read() == b'a':
                     commandReceived = True
-                    print("ack found")
-            commandTries -= 1
+            tries -= 1
             
         #self.emptyBuffer()
         #if arduino sent ack, read line
+        tries = numTries
         if(commandReceived):         
-            for i in range(numTries):
-                if self.serialConnection.in_waiting < 60:
+            for i in range(tries):
+                if self.serialConnection.in_waiting < ArduinoPlant.MIN_MESSAGE_LENGTH:
                     time.sleep(5)
                     
-            if self.serialConnection.in_waiting > 60:
-                message = self.serialConnection.readline().decode()
-                openB = message.find('{')
-                closeB = message.find('}')
-                if(openB != -1 and closeB != -1):
-                    closeB += 1
-                    message = message[openB:closeB]
-                    return message
-                else:
-                    return "error"
-            else:
-                return "error"
-        
+            if self.serialConnection.in_waiting > ArduinoPlant.MIN_MESSAGE_LENGTH:
+                message = ""
+                while(self.serialConnection.in_waiting > 0):
+                    nextByte = self.serialConnection.read().decode()
+                    if(nextByte == '{'):
+                        message += "{"
+                        message += self.serialConnection.readline().decode()
+                        return message
+
         return "error"
 
         
@@ -94,6 +91,7 @@ class ArduinoPlant:
         #try the command up to 10 times
         
         self.emptyBuffer()
+        isAckFound = False
         for i in range(numTries):
             self.serialConnection.write(command)
             time.sleep(1)
@@ -101,9 +99,10 @@ class ArduinoPlant:
             if self.serialConnection.in_waiting > 0:
                 response = self.serialConnection.read()
                 if response == b'a':
-                    return True
-                
-        return False
+                    isAckFound = True
+        
+        self.emptyBuffer()
+        return isAckFound
         
     
     
@@ -128,14 +127,14 @@ class ArduinoPlant:
 if __name__ == "__main__":
     arduino = ArduinoPlant("/dev/ttyACM0",9600)
     
-#     print("watering plant...")
-#     if arduino.waterPlant(5):
-#         print("plant watered")
-#         
-#     print("setting light level...")
-#     if arduino.setLightLevel(3):
-#         print("light level set")
-#     
+#    print("watering plant...")
+#    if arduino.waterPlant(1):
+#        print("plant watered")
+         
+    print("setting light level...")
+    if arduino.setLightLevel(5):
+        print("light level set")
+     
     
     print("getting updated data...")
     response = arduino.updateData()

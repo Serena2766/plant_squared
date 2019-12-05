@@ -15,7 +15,7 @@ class ImageServer:
     UPDATE_COMMAND = '0111'
     ACK = '01100001'
     NACK = '01101110'
-    IDEN_INTERVAL = 30
+    IDEN_INTERVAL = 300
     RETRIES = 5
     ENCODING = [int(cv2.IMWRITE_JPEG_QUALITY), 90] # Quality affects stream rate
 
@@ -32,10 +32,10 @@ class ImageServer:
         self.connection = self.stream.makefile("wb")
 
         # Start listening
-        my_address = ('localhost', recv)
+        my_address = ('192.168.43.84', recv)
         self.s.bind(my_address)
 
-        self.server_address = ('localhost', send)
+        self.server_address = ('192.168.43.84', send)
 
         print("Setting up image processor ... ")
         # Set up image processing
@@ -56,7 +56,7 @@ class ImageServer:
 
     def stream_frame(self) -> int:
         """Encodes and streams one frame to the client
-        
+
         :return: The time it took to encode and stream the frame in s
         """
         start_time = time.time()
@@ -67,7 +67,7 @@ class ImageServer:
 
         self.stream.sendall(struct.pack(">L", size) + frame_data)
         return time.time() - start_time
-    
+
 
     def run_server(self):
         """
@@ -82,9 +82,9 @@ class ImageServer:
             try:
                 data, address = self.s.recvfrom(1024)
                 if self.process_command(data.decode()):
-                    self.s.sendto(self.ACK.encode("utf-8"), self.server_address)
+                    print("Command Completed Successfully")
                 else:
-                    self.s.sendto(self.NACK.encode("utf-8"), self.server_address)
+                    print("Command Failed Successfully")
             except BlockingIOError:
                 pass
 
@@ -100,9 +100,9 @@ class ImageServer:
                     print("Sending condition update to server")
                     self.update_server()
                     last_checked_conditions = int(time.time())
-                    
+
                 last_cmd = int(time.time())
-            
+
             self.stream_frame()
 
 
@@ -132,9 +132,11 @@ class ImageServer:
         """
         # Encode and send plant string
         print("Plant changed, updating server")
-        plant_id_str = str(bin(self.identifier.currentPlant()))[2:].zfill(4)
+        plant_id_str = str(bin(self.identifier.currentPlant()+1))[2:].zfill(4)
+        print(plant_id_str)
+        print(self.PLANTID_COMMAND + plant_id_str)
         for i in range(self.RETRIES):
-            self.s.sendto((self.UPDATE_COMMAND + plant_id_str).encode("utf-8"),
+            self.s.sendto((self.PLANTID_COMMAND + plant_id_str).encode("utf-8"),
                             self.server_address)
 
             # Set blocking and wait for ack before continuing, bad
@@ -186,21 +188,27 @@ class ImageServer:
         Responsible for executing the commands recieved from the server
         """
         if data[:4] == self.WATER_COMMAND:
-            print('Received water command.')  
+            print('Received water command.')
             watered = self.arduino.waterPlant(int(data[4:], 2))
             if watered:
-                self.s.sento(self.ACK.encode("utf-8"), self.server_address)
+                self.s.sendto(self.ACK.encode("utf-8"), self.server_address)
+                print("Sent ACK")
+                return True
             else:
-                self.s.sento(self.NACK.encode("utf-8"), self.server_address)        
-                
+                self.s.sendto(self.NACK.encode("utf-8"), self.server_address)
+                print("Sent NACK")
+
         elif data[:4] == self.LIGHT_COMMAND:
-            print('Received light command.')  
+            print('Received light command.')
             light_set = self.arduino.setLightLevel(int(data[4:], 2))
             if light_set:
-                self.s.sento(self.ACK.encode("utf-8"), self.server_address)
+                self.s.sendto(self.ACK.encode("utf-8"), self.server_address)
+                print("Sent ACK")
+                return True
             else:
-                self.s.sento(self.NACK.encode("utf-8"), self.server_address)
-        
+                self.s.sendto(self.NACK.encode("utf-8"), self.server_address)
+                print("Sent NACK")
+
         return False
 
 
