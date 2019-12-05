@@ -29,6 +29,7 @@ dev_dependencies:
     sdk: flutter
 
 
+
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 
@@ -46,6 +47,14 @@ flutter:
     - assets/haworthiafasciata.png
     - assets/Logo.png
     - assets/africanviolet.jpg
+    - assets/cactus.png
+    - assets/grass.png
+    - assets/watericon1.png
+    - assets/watericon2.png
+    - assets/watericon3.png
+    - assets/watericon4.png
+    - assets/watericon5.png
+
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware.

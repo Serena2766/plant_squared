@@ -10,64 +10,58 @@ Plant Squared
 Main developer: Jerry Xiong
 
 App for Monitoring and Controlling a plant
+
+Display:
+Name of Type of Plant
+Ideal: water, temperature and humidity
+Current: water, temperature and humidity
+
+Actions:
+Refresh data
+Water Plant (5 levels)
+Adjust Light (5 levels)
+
  */
+
+
+//....................................
+//      Global Variables
+//....................................
+// App connection set up
+var phoneIP = new InternetAddress('192.168.1.110');
+var phonePort = 9003;
+
+// Server connection set uo
+var serverIP = new InternetAddress('192.168.1.102');
+var serverPort = 8001;
+
+// Encoded Responses
+var ACK = '01100001';
+var NACK = '01101110';
+var UPDATE = '01110000';
+
+var WATER1 = '00010001';
+var WATER2 = '00010010';
+var WATER3 = '00010011';
+var WATER4 = '00010100';
+var WATER5 = '00010101';
+
+var LIGHT1 = '00100000';
+var LIGHT2 = '00100010';
+var LIGHT3 = '00100011';
+var LIGHT4 = '00100100';
+var LIGHT5 = '00100101';
+
+// Other Values
+const textClearTime = 5; //text stays for 5 seconds before clearing
 
 
 //main function runs the app
 void main() {
   runApp(MyApp());
-
 }
 
-//Send UPD packets based on user command is given
-void _sendCommand(String x) {
-  print('send command function: '  + '$x');
-  //var data = "Hello, World";
-  var codec = new Utf8Codec();
-  //List<int> dataToSend = codec.encode(data);
-  List<int> dataToSend = codec.encode(x);
-  //var dataToSend = utf8.encode(x);
-  print('$dataToSend');
-
-  var localHostAddress = new InternetAddress('127.0.0.1'); //normal alias for localhost
-  var phoneAdress = new InternetAddress('172.17.159.16');
-  var address = new InternetAddress('172.17.76.198'); //ip of laptop
-
-  //var address = new InternetAddress('10.0.2.2'); //alias for laptop from emulator (apparently)
-  //var address = new InternetAddress('10.0.2.2'); //alias
-  //var address = new InternetAddress('172.17.76.198');
-  //10.0.3.2
-
-  RawDatagramSocket.bind(phoneAdress, 9003).then((RawDatagramSocket udpSocket) {
-    //udpSocket.writeEventsEnabled = true;
-    //udpSocket.send(dataToSend, new InternetAddress('192.168.4.1'), 8001);
-    //updSocket.send(dataToSend, new InternetAddress('127.0.0.1'), 8001);
-    //updSocket.send(dataToSend, new InternetAddress('172.17.86.227'), 8001);
-    udpSocket.send(dataToSend, address, 8001);
-    print('Sent data on the stream...');
-
-    //Waiting to receive data packet containing plant info
-    udpSocket.listen((e) {
-      print(e.toString());
-      Datagram dg = udpSocket.receive();
-      if(dg != null){
-        dg.data.forEach((x) => print(x));
-        //check if the "toString()" function works
-        //if(dg.data.contains(''))
-        print('received something not null');
-      }
-  });
-});
-}
-
-
-void _todo()
-{
-
-
-}
-
-
+//App build
 class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
@@ -76,7 +70,6 @@ class MyApp extends StatelessWidget {
       title: 'Flutter Demo',
       theme: ThemeData(
         primarySwatch: Colors.green, //affects icon button
-
         primaryColor: Colors.teal, //affects app bar
         brightness: Brightness.light,
       ),
@@ -85,6 +78,7 @@ class MyApp extends StatelessWidget {
   }
 }
 
+//Homepage
 class MyHomePage extends StatefulWidget {
   MyHomePage({Key key, this.title}) : super(key: key);
 
@@ -94,33 +88,8 @@ class MyHomePage extends StatefulWidget {
   _MyHomePageState createState() => _MyHomePageState();
 }
 
-
+//Configuration
 class _MyHomePageState extends State<MyHomePage> {
-
-  //Function for setting up the connection for receiving data
-  void setUpSocket()
-  {
-    var phoneAddress = new InternetAddress('172.17.159.16');
-    //var address = new InternetAddress('172.16.32.73');
-    var address = new InternetAddress('172.17.76.198');
-    RawDatagramSocket.bind(phoneAddress, 9003).then((udpSocket) {
-
-      print('Listening for a packet');
-      //Waiting to receive data packet containing plant info
-      udpSocket.listen((e) {
-        print(e.toString());
-        Datagram dg = udpSocket.receive();
-        if(dg != null){
-          dg.data.forEach((x) => print(x));
-          //check if the "toString()" function works
-          //if(dg.data.contains(''))
-          print('received something not null');
-        }
-
-
-      });
-    });
-  }
 
   //****************************************
   //              Variables
@@ -141,104 +110,163 @@ class _MyHomePageState extends State<MyHomePage> {
   //Central image and name of plant
   Image _mainImage;
   String _plantName;
-  String _mainText = ' ';
+  String _mainText;
 
   @override
   initState(){
     _mainImage = Image.asset('assets/Logo.png');
-    _plantName = 'Default Flower';
-    setUpSocket();
+    _plantName = 'No Plant';
+    _mainText = '  ';
   }
   //****************************************
 
-
-  void _avatarUpdate()
+  //Clearing the main text
+  clearMainText()
   {
-    print('avatorMode Function');
-    //based on plant type
     setState(() {
-      switch (_plantType) {
-        case 5:
+      _mainText = '  ';
+    });
+  }
+
+  //Allow the text to display for some time before clearing it
+  Future clearTextAfter()
+  {
+    return new Future.delayed(const Duration(seconds: textClearTime), () => clearMainText());
+  }
+
+  //Send UPD packets based on user command is given
+  void _sendCommand(String x) {
+    print('send command function: '  + '$x');
+    var codec = new Utf8Codec();
+    List<int> dataToSend = codec.encode(x);
+    print(dataToSend);
+
+    RawDatagramSocket.bind(phoneIP, phonePort).then((RawDatagramSocket udpSocket) {
+      udpSocket.send(dataToSend, serverIP, serverPort);
+      print('Sent data on the stream...');
+
+      //Waiting to receive data packet containing plant info or responses
+      udpSocket.listen((e) {
+        print(e.toString());
+        Datagram dg = udpSocket.receive();
+        if(dg != null){
+
+          var codec = new Utf8Codec();
+          String str = codec.decode(dg.data);
+          print('received something not null = ');
+          print(str);
+          if(str.startsWith(ACK))
           {
-            _mainImage = new Image.asset('assets/Logo.png');
-            _plantName = 'Default Flower';
+            print('Got the Ack all is well... ');
+            _mainText = 'Command Received by Server';
+            updateData();
+            clearTextAfter();
           }
-          break;
-        case 1:
-          {
-            _mainImage = new Image.asset('assets/flower.png'); //todo update assets
-          }
-          break;
-        case 2:
-          {
-            _mainImage = new Image.asset('assets/flower.png');
-          }
-          break;
-        case 3:
-          {
-            _mainImage = new Image.asset('assets/flower.png');
-          }
-          break;
-        case 4:
-          {
-            _mainImage = new Image.asset('assets/flower.png');
-          }
-          break;
-      }
+          else if(str.startsWith(NACK))
+            {
+              print('Got a Nack ');
+              _mainText = 'Command Not Recognized!';
+            }
+          else
+            {
+              try{ //Decode the message as a Json
+                var parsedJson = json.decode(str);
+                List<int> response = codec.encode(ACK);
+                udpSocket.send(response, serverIP, serverPort);
+                print('update data based on received json');
+                setState(() {
+                  _waterLevel = parsedJson['moisture'];
+                  _temperature = parsedJson['temperature'];
+                  _humidity = parsedJson['humidity'];
+                  _plantType = parsedJson['plant_id'];
+                  updateData();
+                });
+              } on FormatException catch (e){
+                print('The message is not a valid json. Send back Nack');
+                List<int> response = codec.encode(NACK);
+                _mainText = 'Received bad data!';
+                udpSocket.send(response, serverIP, serverPort);
+              }
+            }
+        }
+      });
     });
   }
 
   void updateData()
   {
-    print('avatorMode Function');
     //based on plant type
-    setState(() {
+    print('updating the data based on plant type');
+    print(_plantType);
       switch (_plantType) {
-        case 5:
+        case 5: //No plant scenario
           {
-            _mainImage = new Image.asset('assets/flower.png');
-            _plantName = 'No Plant';
-            _waterLevel = 0.0;
-            _humidity = 0.0;
-            _temperature = 0.0;
+            setState(() {
+              _mainImage = new Image.asset('assets/Logo.png');
+              _plantName = 'No Plant';
+              _idealWaterLevel = 0.0;
+              _idealHumidity = 0.0;
+              _idealTemperature = 0.0;
+              _mainText = 'Plant Data Updated';
+            });
           }
           break;
         case 1:
           {
-            _plantName = 'Violet';
-            _waterLevel = 45.6;
-            _humidity = 58.3;
-            _temperature = 27.1;
+            setState(() {
+              _mainImage = new Image.asset('assets/cactus.png');
+              _plantName = 'Cactus';
+              _idealWaterLevel = 29.4;
+              _idealHumidity = 18.2;
+              _idealTemperature = 37.4;
+              _mainText = 'Plant Data Updated';
+            });
           }
           break;
         case 2:
           {
-            _plantName = 'Cactus';
-            _waterLevel = 29.4;
-            _humidity = 18.2;
-            _temperature = 37.4;
+            setState(() {
+              _mainImage = new Image.asset('assets/haworthiafasciata.png');
+              _plantName = 'Zebra';
+              _idealWaterLevel = 44.1;
+              _idealHumidity = 39.7;
+              _idealTemperature = 34.5;
+              _mainText = 'Plant Data Updated';
+            });
           }
           break;
         case 3:
           {
-            _plantName = 'Flower';
-            _waterLevel = 44.1;
-            _humidity = 39.7;
-            _temperature = 34.5;
+            setState(() {
+              _mainImage = new Image.asset('assets/grass.png');
+              _plantName = 'Jade';
+              _idealWaterLevel = 52.1;
+              _idealHumidity = 50.0;
+              _idealTemperature = 25.3;
+              _mainText = 'Plant Data Updated';
+            });
           }
           break;
         case 4:
           {
-            _plantName = 'Grass';
-            _waterLevel = 52.1;
-            _humidity = 50.0;
-            _temperature = 25.3;
+            setState(() {
+              _mainImage = new Image.asset('assets/africanviolet.png');
+              _plantName = 'Flower';
+              _idealWaterLevel = 52.1;
+              _idealHumidity = 50.0;
+              _idealTemperature = 25.3;
+            });
           }
           break;
+        default: {
+          _mainText = 'Received bad plant type';
+          print('Received bad plant type = ');
+          print(_plantType);
+        }
       }
-    });
   }
 
+  //Main app Layout
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -248,33 +276,37 @@ class _MyHomePageState extends State<MyHomePage> {
           title: Text('Plant Type: ' + '$_plantName'),
 
       ),
-
       body: Center(
-
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: <Widget>[
             Divider(
-              height: 10,
+              color: Colors.green,
+              thickness: 1,
+              height: 1,
             ),
 
             new FlatButton( //main image
-              onPressed: _todo,
+              onPressed: () => _sendCommand(UPDATE),
               child: _mainImage,
             ),
 
             Divider(
-              height: 10,
+              color: Colors.green,
+              thickness: 1,
+              height: 1,
             ),
             //List of plant data
 
             Text(
               '$_mainText',
-              style: Theme.of(context).textTheme.display1,
+              style: Theme.of(context).textTheme.headline,
             ),
 
             Divider(
-              height: 10,
+              color: Colors.green,
+              thickness: 1,
+              height: 1,
             ),
             Row( //heading
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -350,97 +382,131 @@ class _MyHomePageState extends State<MyHomePage> {
 
             Divider(
               color: Colors.green,
-              thickness: 6,
-              height: 30,
+              thickness: 1,
+              height: 1,
             ),
-            Row( //Row of control buttons for water
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: <Widget>[
-                  FloatingActionButton(
-                    onPressed: () => _sendCommand('00010001'),
-                    tooltip: 'Water 1',
-                    child: Icon(Icons.wb_cloudy),
-                    backgroundColor: Colors.blueAccent,
-                    foregroundColor: Colors.indigo,
-                  ),
-                  FloatingActionButton(
-                    onPressed: () => _sendCommand('00010010'),
-                    tooltip: 'Water 2',
-                    child: Icon(Icons.wb_cloudy),
-                    backgroundColor: Colors.blueAccent,
-                    foregroundColor: Colors.indigo,
-                  ),
-                  FloatingActionButton(
-                    onPressed: () => _sendCommand('00010011'),
-                    tooltip: 'Water 3',
-                    child: Icon(Icons.wb_cloudy),
-                    backgroundColor: Colors.blueAccent,
-                    foregroundColor: Colors.indigo,
-                  ),
-                  FloatingActionButton(
-                    onPressed: () => _sendCommand('00010100'),
-                    tooltip: 'Water 4',
-                    child: Icon(Icons.wb_cloudy),
-                    backgroundColor: Colors.blueAccent,
-                    foregroundColor: Colors.indigo,
-                  ),
-                  FloatingActionButton(
-                    onPressed: () => _sendCommand('00010101'),
-                    tooltip: 'Water 5',
-                    child: Icon(Icons.wb_cloudy),
-                    backgroundColor: Colors.blueAccent,
-                    foregroundColor: Colors.indigo,
-                  ),
 
+            Container(
+              color: Colors.lightBlueAccent,
+              child: Row( //Row of control buttons for WATER
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: <Widget>[
+                    FloatingActionButton(
+                      onPressed: () => _sendCommand(WATER1),
+                      tooltip: 'Water 1',
+                      child: new Tab(
+                          icon: Container(
+                              child: new Image.asset('assets/watericon1.png'),
+                              height:20,
+                              width: 20
+                          )
+                      ),
+                      backgroundColor: Colors.white,
+                      foregroundColor: Colors.lightBlueAccent,
+                    ),
+                    FloatingActionButton(
+                      onPressed: () => _sendCommand(WATER2),
+                      tooltip: 'Water 2',
+                      child: new Tab(
+                          icon: Container(
+                              child: new Image.asset('assets/watericon2.png'),
+                              height:40,
+                              width: 40
+                          )
+                      ),
+                      backgroundColor: Colors.white,
+                      foregroundColor: Colors.blue,
+                    ),
+                    FloatingActionButton(
+                      onPressed: () => _sendCommand(WATER3),
+                      tooltip: 'Water 3',
+                      child: new Tab(
+                          icon: Container(
+                              child: new Image.asset('assets/watericon3.png'),
+                              height:40,
+                              width: 40
+                          )
+                      ),
+                      backgroundColor: Colors.white,
+                      foregroundColor: Colors.indigo,
+                    ),
+                    FloatingActionButton(
+                      onPressed: () => _sendCommand(WATER4),
+                      tooltip: 'Water 4',
+                      child: new Tab(
+                          icon: Container(
+                              child: new Image.asset('assets/watericon4.png'),
+                              height:40,
+                              width: 40
+                          )
+                      ),
 
-                ]
+                      backgroundColor: Colors.white,
+                      foregroundColor: Colors.black26,
+                    ),
+                    FloatingActionButton(
+                      onPressed: () => _sendCommand(WATER5),
+                      tooltip: 'Water 5',
+                      child: new Tab(
+                          icon: Container(
+                              child: new Image.asset('assets/watericon5.png'),
+                              height:40,
+                              width: 40
+                          )
+                      ),
+                      backgroundColor: Colors.white,
+                      foregroundColor: Colors.indigo,
+                    ),
+                  ]
+              ),
             ),
-            Row( //Row of control buttons
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: <Widget>[
-                  FloatingActionButton(
-                    onPressed: () => _sendCommand('00100001'),
-                    tooltip: 'Brightness 1',
-                    child: Icon(Icons.brightness_3),
-                    backgroundColor: Colors.black,
-                    foregroundColor: Colors.blueGrey,
-                  ),
-                  FloatingActionButton(
-                    onPressed: () => _sendCommand('00100010'),
-                    tooltip: 'Brightness 2',
-                    child: Icon(Icons.brightness_2),
-                    backgroundColor: Colors.black45,
-                    foregroundColor: Colors.white30,
-                  ),
-                  FloatingActionButton(
-                    onPressed: () => _sendCommand('00100011'),
-                    tooltip: 'Brightness 3',
-                    child: Icon(Icons.brightness_1),
-                    backgroundColor: Colors.black26,
-                    foregroundColor: Colors.white,
-                  ),
-                  FloatingActionButton(
-                    onPressed: () => _sendCommand('00100100'),
-                    tooltip: 'Brightness 4',
-                    child: Icon(Icons.brightness_4),
-                    backgroundColor: Colors.white,
-                    foregroundColor: Colors.deepOrange,
-                  ),
-                  FloatingActionButton(
-                    onPressed: () => _sendCommand('00100101'),
-                    tooltip: 'Brightness 5',
-                    child: Icon(Icons.brightness_5),
-                    backgroundColor: Colors.white,
-                    foregroundColor: Colors.red,
-                  ),
 
-                ]
-            ),
+        Container(
+          color: Colors.yellowAccent[100],
+          child: Row( //Row of control buttons for LIGHT
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: <Widget>[
+                FloatingActionButton(
+                  onPressed: () => _sendCommand(LIGHT1),
+                  tooltip: 'Brightness 1',
+                  child: Icon(Icons.brightness_3),
+                  backgroundColor: Colors.black,
+                  foregroundColor: Colors.blueGrey,
+                ),
+                FloatingActionButton(
+                  onPressed: () => _sendCommand(LIGHT2),
+                  tooltip: 'Brightness 2',
+                  child: Icon(Icons.brightness_2),
+                  backgroundColor: Colors.black45,
+                  foregroundColor: Colors.white30,
+                ),
+                FloatingActionButton(
+                  onPressed: () => _sendCommand(LIGHT3),
+                  tooltip: 'Brightness 3',
+                  child: Icon(Icons.brightness_1),
+                  backgroundColor: Colors.black26,
+                  foregroundColor: Colors.white,
+                ),
+                FloatingActionButton(
+                  onPressed: () => _sendCommand(LIGHT4),
+                  tooltip: 'Brightness 4',
+                  child: Icon(Icons.brightness_4),
+                  backgroundColor: Colors.white,
+                  foregroundColor: Colors.deepOrange,
+                ),
+                FloatingActionButton(
+                  onPressed: () => _sendCommand(LIGHT5),
+                  tooltip: 'Brightness 5',
+                  child: Icon(Icons.brightness_5),
+                  backgroundColor: Colors.white,
+                  foregroundColor: Colors.red,
+                ),
+              ]
+          ),
+        ),
           ],
         ),
       ),
     );
   }
-
-
 }
