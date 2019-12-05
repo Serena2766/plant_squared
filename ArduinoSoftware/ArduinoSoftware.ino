@@ -37,7 +37,7 @@ void setup() {
 
 void loop() {
 
-  //code implements arduino software flow chart on page 17 of design document
+  //this code implements arduino software flow chart on page 17 of design document
 
 
  isPlantPresent = isPlantPresentFunc();
@@ -54,6 +54,8 @@ void loop() {
       //decipher command
       if(command == B01110000){
         //update data: read and send data from all the sensors
+
+        Serial.print("a");
         String serialMessage = "{";
         
         serialMessage += "\"moisture\":" + String(getMoisture(),1) + ",";
@@ -61,8 +63,8 @@ void loop() {
         serialMessage += "\"humidity\":" + String(getHumidity(),2) + ",";
         serialMessage += "\"lightLevel\":" + String(currentLightLevel);
         
-        serialMessage += "}";
-        Serial.println(serialMessage);
+        serialMessage += "}\n";
+        Serial.print(serialMessage);
         
       }else if(command >> 4 == B00000001){
         //water the plant, command = 0001 0+amount(3bits)
@@ -70,7 +72,7 @@ void loop() {
         
         byte amount = command - B00010000;
         waterPlant(amount);
-        Serial.println("a");
+        Serial.print("a");
         
       }else if(command >> 5 == B00000001){
         //set light level 
@@ -78,7 +80,7 @@ void loop() {
         
         byte level = command - B00100000;
         setLightLevel(level);
-        Serial.println("a");
+        Serial.print("a");
       }else{
         //command not found
         //Serial.println("{\"error\":command not found} ");
@@ -87,7 +89,7 @@ void loop() {
     }else{
       //command is received from client Raspberry PI, but the plant is not in the system. 
       //send error message
-      Serial.println("{\"error\":command was received but plant is not in the system}");
+      Serial.print("{\"error\":command was received but plant is not in the system}\n");
     
     }//end if plant is present
   }//end if serial is available
@@ -181,7 +183,7 @@ void waterPlant(byte amount){
 
   while(amount > 0){
     digitalWrite(waterPin,HIGH);
-    delay(1000);
+    delay(100);
     amount--;
   }
 
