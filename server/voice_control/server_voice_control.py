@@ -1,3 +1,4 @@
+#author Xinrui Zhang
 import snowboydecoder
 import sys, socket, time
 import signal
