@@ -4,11 +4,13 @@ This is a picture of our project:)
 
 ## Directories
 Each part of this project was worked on in a different branch. Though there was some work done by others on those branches, each part was largely maintained by a single person, and can be considered a catalogue of thier contributions.
-
+  ``` 
 Serena2766 - Xinrui Zhang
 juanpablocontreras - Juan Pablo Contreras
-Jerry Xiong - Jerry Xiong
+jerryxiong-code - Jerry Xiong
 xmaayy - Xander May
+  ``` 
+Note: The app was developed in the FlutterApp branch, but due to a github issue, it could not be merged onto master. Please review the FlutterApp branch for the commit history of the app development.
 
 ## OpenCV
 OpenCV needs to be installed on both the server and client Pi. There is no pre-built binary for this, so you're going to need to compile it yourself from source. The guide I followed can be found [here](https://www.pyimagesearch.com/2018/09/26/install-opencv-4-on-your-raspberry-pi/), though there are many faster ways to do it that take advantage of cross-compilation (build it on a normal computer for use on a pi). This build process can take upwards of 3-4 hours on a Pi4, so I'd recommend a good movie. 
@@ -54,3 +56,19 @@ Pytorch must, at the time of my writing this, be built for your pi. I used the g
 ```
 python ImageProcessing/server.py
 ```
+
+## On App:
+  ```
+The app could be run on Android Studio, but needs the Flutter plugin installed.
+Note that for setting up the UDP connect, the values for the ports and IP addresses must be consistent with the Server.
+The app can display
+  -The Plant Type
+  -A Main Image of the Plant based on Type
+  -Ideal Conditions (Water level, Humidity, Temperature)
+  -Current Conditions (Water level, Humidity, Temperature)
+The app can execute
+  -Data Update Requests (by clicking on the main image)
+  -Water Commands (5 levels)
+  -Light Commands (5 levels)
+  -Data Reset
+    ```
