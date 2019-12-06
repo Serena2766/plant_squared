@@ -1,3 +1,6 @@
+#author Xinrui Zhang
+
+#short testing code
 import speech_recognition as sr 
 box_name = ['box one', 'lovely']
 
