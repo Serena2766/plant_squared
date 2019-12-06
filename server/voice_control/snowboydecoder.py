@@ -1,5 +1,5 @@
+#author Xinrui Zhang
 #!/usr/bin/env python
-
 import collections
 import pyaudio
 import snowboydetect
@@ -114,7 +114,7 @@ class HotwordDetector(object):
             frames_per_buffer=2048,
             stream_callback=self.audio_callback)
 
-
+    #made some changes to fix in both snowboy and Google speech to text API 
     def start(self, detected_callback=play_audio_file,
               interrupt_check=lambda: False,
               sleep_time=0.03):
@@ -176,7 +176,8 @@ class HotwordDetector(object):
 stream_callback=self.audio_callback)
 
         logger.debug("finished.")
-
+        
+    #made some changes to fix in both snowboy and Google speech to text API 
     def terminate(self):
         """
         Terminate audio stream. Users cannot call start() again to detect.
