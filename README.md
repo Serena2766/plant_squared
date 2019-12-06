@@ -4,14 +4,12 @@ This is a picture of our project:)
 
 ## Directories
 Each part of this project was worked on in a different branch. Though there was some work done by others on those branches, each part was largely maintained by a single person, and can be considered a catalogue of thier contributions.
-  ``` 
-Serena2766 - Xinrui Zhang
-juanpablocontreras - Juan Pablo Contreras
-jerryxiong-code - Jerry Xiong
-xmaayy - Xander May
-  ``` 
-Note: The app was developed in the FlutterApp branch, but due to a github issue, it could not be merged onto master. Please review the FlutterApp branch for the commit history of the app development.
-
+*Note: The app was developed in the FlutterApp branch, but due to a github issue, it could not be merged onto master. Please review the FlutterApp branch for the commit history of the app development.
+## Authors
+- Xinrui Zhang          - Serena2766
+- Juan Pablo Contreras  - juanpablocontreras
+- Jerry Xiong           - Jerry Xiong
+- Xander May            - xmaayy         
 ## OpenCV
 OpenCV needs to be installed on both the server and client Pi. There is no pre-built binary for this, so you're going to need to compile it yourself from source. The guide I followed can be found [here](https://www.pyimagesearch.com/2018/09/26/install-opencv-4-on-your-raspberry-pi/), though there are many faster ways to do it that take advantage of cross-compilation (build it on a normal computer for use on a pi). This build process can take upwards of 3-4 hours on a Pi4, so I'd recommend a good movie. 
 
