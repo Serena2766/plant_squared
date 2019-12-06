@@ -1,5 +1,6 @@
 # plant_squared
-
+This is a picture of our project:)
+![demo](https://github.com/Serena2766/plant_squared/blob/master/demo.jpg)
 ## On the server pi:
 #### Prepare to run the voice recognition
 - run the follwing for [snowboy](http://docs.kitt.ai/snowboy/#running-on-raspberry-pi):
