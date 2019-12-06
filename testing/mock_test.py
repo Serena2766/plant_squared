@@ -1,3 +1,4 @@
+#author Xinrui Zhang
 import socket, sys, time
 
 WATER_COMMAND = '0001'
@@ -84,13 +85,11 @@ while True:
                 time.sleep(2)
                 if cnt2 == 2:
                     s.sendto(data.encode('utf-8'), server_address)
-                    print('Client: Sent updated info to server')
-                
+                    print('Client: Sent updated info to server')              
             elif data[:4] == PLANTID_COMMAND:   
                 print('App: Received plant id command.')
                 time.sleep(2)
                 s.sendto(ACK.encode('utf-8'), server_address)
-        #print ("Received %s bytes from %s %s: " % (len(data), address, data ))
     except (KeyboardInterrupt,SystemExit):
         print('Exit the system.')
         raise   
