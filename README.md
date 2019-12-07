@@ -14,7 +14,7 @@ Each part of this project was worked on in a different branch. Though there was 
 OpenCV needs to be installed on both the server and client Pi. There is no pre-built binary for this, so you're going to need to compile it yourself from source. The guide I followed can be found [here](https://www.pyimagesearch.com/2018/09/26/install-opencv-4-on-your-raspberry-pi/), though there are many faster ways to do it that take advantage of cross-compilation (build it on a normal computer for use on a pi). This build process can take upwards of 3-4 hours on a Pi4, so I'd recommend a good movie. 
 
 ## On the server pi:
-#### Prepare to run the voice recognition
+### Prepare to run the voice recognition
 - run the follwing for [snowboy](http://docs.kitt.ai/snowboy/#running-on-raspberry-pi):
   ``` 
   sudo apt-get install libatlas-base-dev
@@ -35,7 +35,7 @@ OpenCV needs to be installed on both the server and client Pi. There is no pre-b
   ```
   
  
-#### Ready to run
+### Ready to run
   ```
   python server/server_requestHandler.py
   python server/server_voice_control.py
@@ -56,30 +56,27 @@ python ImageProcessing/server.py
 ```
 
 ## On App:
-  ```
 The app could be run on Android Studio, but needs the Flutter plugin installed.
 Note that for setting up the UDP connect, the values for the ports and IP addresses must be consistent with the Server.
 The app can display
-  -The Plant Type
-  -A Main Image of the Plant based on Type
-  -Ideal Conditions (Water level, Humidity, Temperature)
-  -Current Conditions (Water level, Humidity, Temperature)
+  - The Plant Type
+  - A Main Image of the Plant based on Type
+  - Ideal Conditions (Water level, Humidity, Temperature)
+  - Current Conditions (Water level, Humidity, Temperature)
 The app can execute
-  -Data Update Requests (by clicking on the main image)
-  -Water Commands (5 levels)
-  -Light Commands (5 levels)
-  -Data Reset
-  
- ```
-    
-    
- ## Hardware
+  - Data Update Requests (by clicking on the main image)
+  - Water Commands (5 levels)
+  - Light Commands (5 levels)
+  - Data Reset
  
+    
+    
+ ## Hardware:
  The main component of the harware is the arduino, and we connect the sensors and actuator using the pins. 
  
- First we start by connecting the DHT11 temperature and humidity sensor. The First pin is connected to 5V VCC, the second pin goes to PIN 2 of the arduino, and the fourth pin is connected to ground. you can find the data sheet for the sensor here: https://components101.com/sites/default/files/component_datasheet/DHT11-Temperature-Sensor.pdf
+ First we start by connecting the DHT11 temperature and humidity sensor. The First pin is connected to 5V VCC, the second pin goes to PIN 2 of the arduino, and the fourth pin is connected to ground. you can find the data sheet for the sensor [here](https://components101.com/sites/default/files/component_datasheet/DHT11-Temperature-Sensor.pdf)
  
- The YL-69 sensor is then connected to the YL-68 module using the two pins. The pin order does not matter, but it should be changed from time to time for maintenance. The First pin of the YL-68 module is connected to 5V VCC, the second pin is connected to ground, and the fourth pin is connected to the A0 pin on the Arduino. A guide for the YL-69 sensor can be found here: https://randomnerdtutorials.com/guide-for-soil-moisture-sensor-yl-69-or-hl-69-with-the-arduino/
+ The YL-69 sensor is then connected to the YL-68 module using the two pins. The pin order does not matter, but it should be changed from time to time for maintenance. The First pin of the YL-68 module is connected to 5V VCC, the second pin is connected to ground, and the fourth pin is connected to the A0 pin on the Arduino. A guide for the YL-69 sensor can be found [here](https://randomnerdtutorials.com/guide-for-soil-moisture-sensor-yl-69-or-hl-69-with-the-arduino/)
  
  The LED positive leg is connected to pin 3 on the Arduino, and the other leg is connected to ground. Pin 3 is used because it supportds Pulse Width Modulation.
  
