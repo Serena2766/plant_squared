@@ -81,3 +81,5 @@ The app can execute
  The LED positive leg is connected to pin 3 on the Arduino, and the other leg is connected to ground. Pin 3 is used because it supportds Pulse Width Modulation.
  
  The Vin pin of the relay is connected to pin 4 on the Arduinol. Vcc pin goes to 5V VCC, and ground should go to common ground. The two output cables of the realy should be connected to the water valve and the power supply. 
+ 
+ The arduino has to be serially connected to the client Raspberry Pi
