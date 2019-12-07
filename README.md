@@ -58,12 +58,12 @@ python ImageProcessing/server.py
 ## On App:
 The app could be run on Android Studio, but needs the Flutter plugin installed.
 Note that for setting up the UDP connect, the values for the ports and IP addresses must be consistent with the Server.
-The app can display
+- The app can display
   - The Plant Type
   - A Main Image of the Plant based on Type
   - Ideal Conditions (Water level, Humidity, Temperature)
   - Current Conditions (Water level, Humidity, Temperature)
-The app can execute
+- The app can execute
   - Data Update Requests (by clicking on the main image)
   - Water Commands (5 levels)
   - Light Commands (5 levels)
