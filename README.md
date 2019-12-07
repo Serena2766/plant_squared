@@ -69,7 +69,8 @@ The app can execute
   -Water Commands (5 levels)
   -Light Commands (5 levels)
   -Data Reset
-    ```
+  
+ ```
     
     
  ## Hardware
