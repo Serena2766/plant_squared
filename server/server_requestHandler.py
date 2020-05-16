@@ -2,7 +2,6 @@
 # version 12.1.2019
 import socket, sys, time, threading, json
 from timeit import Timer
-import sqlite3
 from sqlite3 import Error
 
 #define communication protocol constant
@@ -14,20 +13,25 @@ ACK = '01100001'
 NACK = '01101110'
 bit_list = ['0001','0010','0011','0100','0101']
 TIMEOUT = 15
+
 #define plant info
 DEFAULT = 0
 current_plant_id = DEFAULT
+
 #list: moisture, light_level, temperature, humidity
 current_condition = [0,0,0,0]
 ideal_condition =[0,0,0,0]
+
 #define client address
 client_ip = '192.168.43.84'
 client_port = int(9003)
 client_address = (client_ip, client_port)
+
 #define app address
 app_ip = '192.168.43.105'
 app_port = int(9003)
 app_address = (app_ip, app_port)
+
 #define server address
 SIZE = 1024
 server_ip = '192.168.43.84'
